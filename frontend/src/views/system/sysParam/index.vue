@@ -25,19 +25,19 @@
           name="ten"
         />
 
-        <el-tab-pane
-          v-if="engineMode === 'simple'"
-          lazy
-          :label="$t('system_parameter_setting.engine_mode_setting')"
-          name="six"
-        />
+        <!--        <el-tab-pane-->
+        <!--          v-if="engineMode === 'simple'"-->
+        <!--          lazy-->
+        <!--          :label="$t('system_parameter_setting.engine_mode_setting')"-->
+        <!--          name="six"-->
+        <!--        />-->
 
-        <el-tab-pane
-          v-if="engineMode === 'cluster'"
-          lazy
-          :label="$t('system_parameter_setting.engine_mode_setting')"
-          name="seven"
-        />
+        <!--        <el-tab-pane-->
+        <!--          v-if="engineMode === 'cluster'"-->
+        <!--          lazy-->
+        <!--          :label="$t('system_parameter_setting.engine_mode_setting')"-->
+        <!--          name="seven"-->
+        <!--        />-->
 
         <el-tab-pane
           v-if="engineMode === 'cluster'"
