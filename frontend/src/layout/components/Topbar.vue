@@ -6,7 +6,7 @@
     >
       <svg-icon
         v-if="!logoUrl && axiosFinished"
-        icon-class="DataEase"
+        icon-class="vab"
         custom-class="top-nav-logo-icon"
       />
       <img
@@ -27,6 +27,7 @@
     >
       <div
         v-for="item in permission_routes"
+        v-if="item.path !== '/ds-form' && item.path !== '/dataset-form' && item.path !== '/person-info'"
         :key="item.path"
         class="nav-item"
       >
@@ -47,18 +48,6 @@
     >
       <notification class="right-menu-item hover-effect" />
       <lang-select class="right-menu-item hover-effect" />
-      <div
-        style="height: 100%;padding: 0 8px;"
-        class="right-menu-item hover-effect"
-      >
-        <a
-          :href="helpLink"
-          target="_blank"
-          style="display: flex;height: 100%;width: 100%;justify-content: center;align-items: center;"
-        >
-          <svg-icon icon-class="docs" />
-        </a>
-      </div>
 
       <el-dropdown
         ref="my-drop"
@@ -92,9 +81,6 @@
             <el-dropdown-item>{{ $t('user.change_password') }}</el-dropdown-item>
           </router-link>
 
-          <router-link to="/about/index">
-            <el-dropdown-item>{{ $t('commons.about_us') }}</el-dropdown-item>
-          </router-link>
           <el-dropdown-item
             v-if="!isOtherPlatform"
             divided
