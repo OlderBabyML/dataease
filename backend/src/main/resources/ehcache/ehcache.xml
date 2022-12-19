@@ -156,8 +156,8 @@
             maxElementsOnDisk="1000"
             overflowToDisk="true"
             diskPersistent="true"
-            timeToIdleSeconds="1800"
-            timeToLiveSeconds="3600"
+            timeToIdleSeconds="10"
+            timeToLiveSeconds="10"
             memoryStoreEvictionPolicy="LRU"
     />
     <!--用户授权数据集缓存-->
@@ -168,8 +168,8 @@
             maxElementsOnDisk="1000"
             overflowToDisk="true"
             diskPersistent="true"
-            timeToIdleSeconds="1800"
-            timeToLiveSeconds="3600"
+            timeToIdleSeconds="10"
+            timeToLiveSeconds="10"
             memoryStoreEvictionPolicy="LRU"
     />
     <!--用户授权仪表板缓存-->
@@ -180,8 +180,8 @@
             maxElementsOnDisk="1000"
             overflowToDisk="true"
             diskPersistent="true"
-            timeToIdleSeconds="1800"
-            timeToLiveSeconds="3600"
+            timeToIdleSeconds="10"
+            timeToLiveSeconds="10"
             memoryStoreEvictionPolicy="LRU"
     />
 
