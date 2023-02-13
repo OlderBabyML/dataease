@@ -18,6 +18,7 @@
     >
       <sidebar-item
         v-for="route in routes"
+        v-if=" route.path !== '/task-ds-form'"
         :key="route.path"
         :is-collapse="isCollapse"
         :item="route"

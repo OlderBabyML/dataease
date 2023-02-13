@@ -27,7 +27,7 @@
     >
       <div
         v-for="item in permission_routes"
-        v-if="item.path !== '/ds-form' && item.path !== '/dataset-form' && item.path !== '/person-info'"
+        v-if="item.path !== '/ds-form' && item.path !== '/dataset-form' && item.path !== '/person-info' && item.path !== '/task-ds-form'"
         :key="item.path"
         class="nav-item"
       >
