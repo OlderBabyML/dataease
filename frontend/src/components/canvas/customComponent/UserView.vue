@@ -152,6 +152,13 @@
         <el-button
           v-if="showChartInfoType==='details' && hasDataPermission('export',panelInfo.privileges)"
           size="mini"
+          @click="exportJSON"
+        >
+          导出JSON
+        </el-button>
+        <el-button
+          v-if="showChartInfoType==='details' && hasDataPermission('export',panelInfo.privileges)"
+          size="mini"
           :disabled="$store.getters.loadingMap[$store.getters.currentPath]"
           @click="exportExcel"
         >
@@ -162,13 +169,417 @@
         </el-button>
       </span>
       <user-view-dialog
-        v-if="chartDetailsVisible"
+        v-if="chartDetailsVisible && showChartInfoType!=='clock'"
         ref="userViewDialog"
         :chart="showChartInfo"
         :chart-table="showChartTableInfo"
         :canvas-style-data="canvasStyleData"
         :open-type="showChartInfoType"
       />
+      <el-table
+        v-if="showChartInfoType==='clock'"
+        :data="indexList"
+        border
+        style="width: 100%"
+      >
+        <el-table-column
+          prop="name"
+          label="指标"
+        />
+        <el-table-column
+          prop="success"
+          label="累计成功报警次数"
+        />
+        <el-table-column
+          prop="failed"
+          label="累计成功报警次数"
+        />
+        <el-table-column
+          prop="lastTime"
+          label="上次报警时间"
+        />
+        <el-table-column
+          label="状态"
+        >
+          <template slot-scope="{row}">
+            <el-switch
+              v-model="row.status"
+              active-color="#13ce66"
+              inactive-color="#ff4949"
+              @change="updateStatus(row)"
+            />
+          </template>
+        </el-table-column>
+        <el-table-column
+          label="操作"
+          width="200"
+        >
+          <template slot-scope="{row}">
+            <el-button
+              type="text"
+              @click="editAlarm(row)"
+            >编辑</el-button>
+            <el-button
+              type="text"
+              @click="openLog(row)"
+            >调度日志</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+    </el-dialog>
+    <!--报警详情-->
+    <el-dialog
+      :visible.sync="chartAlarmVisible"
+      width="100%"
+      class="alarm-css"
+      :destroy-on-close="true"
+      :append-to-body="true"
+      :fullscreen="true"
+      :show-close="false"
+    >
+      <template slot="title">
+        <div class="de-ds-form">
+          <div
+            class="de-ds-top"
+          >
+            <span class="name">
+              <i
+                class="el-icon-arrow-left"
+                @click="logOut"
+              />
+              {{ $t('commons.edit') + alarm.name + '报警' }}
+            </span>
+            <div class="apply">
+              <deBtn
+                secondary
+                @click="logOut"
+              >{{ $t('commons.cancel') }}
+              </deBtn>
+              <deBtn
+                type="primary"
+                @click="save"
+              >{{ $t('commons.save') }}
+              </deBtn>
+            </div>
+          </div>
+        </div>
+      </template>
+      <div style="height: 100%;background-color: #f6f8fa;display: flex;justify-content: center">
+        <div style="width: 65%">
+          <div style="height: 33%;background-color: #FFFFFF;padding: 5%;margin: 10px">
+            <div style="font-weight: bold;margin-bottom: 15px;font-size: 16px">{{ '基本信息' }}</div>
+            <el-divider />
+            <el-form
+              label-position="left"
+              label-width="100px"
+              :v-model="alarm"
+            >
+              <el-form-item label="图表名称">
+                {{ chart.title }}
+              </el-form-item>
+              <el-form-item label="指标名称">
+                {{ alarm.name }}
+              </el-form-item>
+              <el-form-item
+                label="时间字段"
+              >
+                <el-select
+                  v-model="alarm.timeField"
+                  style="width: 140px"
+                  value-key="id"
+                  filterable
+                  placeholder="请选择"
+                >
+                  <el-option
+                    v-for="(item,index) in chart.data.sourceFields"
+                    :key="index"
+                    :label="item.name"
+                    :value="item"
+                  />
+                </el-select>
+                <el-select
+                  v-model="alarm.format"
+                  style="width: 220px"
+                  placeholder="请选择格式"
+                >
+                  <el-option
+                    label="yyyy"
+                    value="yyyy"
+                  />
+                  <el-option
+                    label="yyyy-MM"
+                    value="yyyy-MM"
+                  />
+                  <el-option
+                    label="yyyy-MM-dd"
+                    value="yyyy-MM-dd"
+                  />
+                  <el-option
+                    label="yyyy-MM-dd HH"
+                    value="yyyy-MM-dd HH"
+                  />
+                  <el-option
+                    label="yyyy-MM-dd HH:mm"
+                    value="yyyy-MM-dd HH:mm"
+                  />
+                  <el-option
+                    label="yyyy-MM-dd HH:mm:ss"
+                    value="yyyy-MM-dd HH:mm:ss"
+                  />
+                </el-select>
+              </el-form-item>
+              <el-form-item
+                label="时间范围"
+              >
+                <el-input
+                  v-model="alarm.timeNumber"
+                  type="number"
+                  style="width: 160px"
+                />
+                <el-select
+                  v-model="alarm.timeType"
+                  style="width: 100px"
+                  placeholder="请选择时间单位"
+                >
+                  <el-option
+                    label="秒"
+                    value="秒"
+                  />
+                  <el-option
+                    label="分钟"
+                    value="分钟"
+                  />
+                  <el-option
+                    label="小时"
+                    value="小时"
+                  />
+                  <el-option
+                    label="天"
+                    value="天"
+                  />
+                </el-select>
+              </el-form-item>
+            </el-form>
+          </div>
+          <div style="height: 33%;background-color: #FFFFFF;padding: 5%;margin: 10px">
+            <div style="font-weight: bold;margin-bottom: 15px;font-size: 16px">{{ '设置预警规则' }}</div>
+            <el-divider />
+            <el-form
+              label-position="left"
+              label-width="100px"
+              :v-model="alarm"
+              :rules="alarmFormRules"
+            >
+              <el-form-item
+                label="cron表达式"
+              >
+                <el-input
+                  v-model="alarm.cron"
+                  style="width: 240px"
+                />
+                <el-button
+                  type="primary"
+                  @click="dialogFormVisibleCron = true"
+                >
+                  生成表达式
+                  <i class="el-icon-time el-icon--right" />
+                </el-button>
+              </el-form-item>
+              <el-form-item
+                v-for="(item,index) in alarm.rules"
+                :key="index"
+                prop="rules"
+                :label="'规则'+ (index + 1)"
+              >
+                <div style="display: flex;justify-content: left">
+                  <el-select
+                    v-model="item.operate"
+                    style="width: 100px"
+                    placeholder="请选择"
+                  >
+                    <el-option
+                      label="高于"
+                      value="高于"
+                    />
+                    <el-option
+                      label="低于"
+                      value="低于"
+                    />
+                  </el-select>
+                  <el-select
+                    v-model="item.type"
+                    style="width: 100px"
+                    placeholder="请选择"
+                  >
+                    <el-option
+                      label="固定值"
+                      value="固定值"
+                    />
+                  </el-select>
+                  <el-input
+                    v-model="item.value"
+                    style="width: 160px"
+                  />
+                  报警时图表背景颜色：
+                  <el-color-picker
+                    v-model="item.color"
+                    class="color-picker-style"
+                    :predefine="predefineColors"
+                  />
+                  <i
+                    v-if="index !== 0"
+                    class="el-icon-minus"
+                    style="color: #cc0000;cursor: pointer;margin-left: 5px"
+                    @click="subAlarmRuleType(index)"
+                  />
+                </div>
+              </el-form-item>
+              <el-form-item>
+                <span
+                  class="add-item"
+                  @click="addAlarmRuleType"
+                ><i
+                  class="el-icon-plus"
+                />添加规则</span>
+              </el-form-item>
+            </el-form>
+          </div>
+          <div style="height: 34%;background-color: #FFFFFF;padding: 5%;margin: 10px">
+            <div style="font-weight: bold;margin-bottom: 15px;font-size: 16px">{{ '通知方式' }}</div>
+            <el-divider />
+            <el-form
+              label-position="left"
+              label-width="100px"
+              :v-model="alarm"
+            >
+              <el-form-item
+                v-for="(item,index) in alarm.sends"
+                :key="index"
+                :label="index === 0 ?'发送设置':''"
+              >
+                <el-select
+                  v-model="item.type"
+                  style="width: 140px"
+                  placeholder="请选择"
+                >
+                  <el-option
+                    v-for="(type,i) in options.sendType"
+                    :key="i"
+                    :label="type"
+                    :value="type"
+                  />
+                </el-select>
+                <el-select
+                  v-if="item.type === '飞书个人' || item.type === '邮箱' || item.type === '电话'"
+                  v-model="item.users"
+                  value-key="userId"
+                  multiple
+                  filterable
+                  placeholder="请选择"
+                >
+                  <el-option
+                    v-for="item in options.userList"
+                    :key="item.userId"
+                    :label="item.nickName"
+                    :value="item"
+                  />
+                </el-select>
+                <el-input
+                  v-else
+                  v-model="item.link"
+                  style="width: 400px"
+                />
+                <i
+                  v-if="index !== 0"
+                  class="el-icon-minus"
+                  style="color: #cc0000;cursor: pointer;margin-left: 5px"
+                  @click="subAlarmSendType(index)"
+                />
+              </el-form-item>
+              <el-form-item>
+                <span
+                  class="add-item"
+                  @click="addAlarmSendType"
+                ><i class="el-icon-plus" />添加发送设置</span>
+              </el-form-item>
+            </el-form>
+          </div>
+        </div>
+      </div>
+      <template slot="footer">
+        <div style="background-color: #f6f8fa;height: 100%" />
+      </template>
+    </el-dialog>
+    <!--cron-->
+    <el-dialog
+      :visible.sync="dialogFormVisibleCron"
+      title="cron表达式生成器"
+      width="60%"
+      @close="dialogFormVisibleCron = false"
+    >
+      <crontab
+        :expression="alarm.cron"
+        @fill="handleCron"
+        @hide="dialogFormVisibleCron = false"
+      />
+    </el-dialog>
+    <!--日志-->
+    <el-dialog
+      :visible.sync="dialogFormVisibleLog"
+      title="调度日志"
+      width="60%"
+      @close="dialogFormVisibleLog = false"
+    >
+      <div style="height: 600px">
+        <grid-table
+          style="height: 100%"
+          :table-data="jobLogList"
+          current-row-key="id"
+          :pagination="paginationConfig"
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
+        >
+          <el-table-column
+            key="id"
+            align="center"
+            show-overflow-tooltip
+            label="id"
+            prop="id"
+          />
+          <el-table-column
+            key="sourceName"
+            align="center"
+            show-overflow-tooltip
+            label="标题"
+            prop="sourceName"
+          />
+          <el-table-column
+            key="remarks"
+            show-overflow-tooltip
+            align="center"
+            label="详细信息"
+            prop="remarks"
+          />
+          <el-table-column
+            key="operateType"
+            show-overflow-tooltip
+            align="center"
+            label="执行状态"
+            prop="operateType"
+          >
+            <template #default="{ row }">
+              <el-tag>{{ row.operateType === 30 ? '执行成功' : '执行失败' }}</el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column
+            key="time"
+            show-overflow-tooltip
+            align="center"
+            label="调度时间"
+            prop="time"
+          />
+        </grid-table>
+      </div>
     </el-dialog>
 
     <!--手机视图详情-->
@@ -190,7 +601,8 @@
 </template>
 
 <script>
-
+import { saveScheduler, listScheduler, statusScheduler, logScheduler } from '@/api/chart/chart'
+import { allUsers } from '@/api/system/user'
 import { viewData } from '@/api/panel/panel'
 import { viewInfo } from '@/api/link'
 import ChartComponent from '@/views/chart/components/ChartComponent.vue'
@@ -200,7 +612,7 @@ import { uuid } from 'vue-uuid'
 import bus from '@/utils/bus'
 import { mapState } from 'vuex'
 import { isChange } from '@/utils/conditionUtil'
-import { BASE_CHART_STRING } from '@/views/chart/chart/chart'
+import { BASE_CHART_STRING, COLOR_PANEL } from '@/views/chart/chart/chart'
 import { deepCopy } from '@/components/canvas/utils/utils'
 import { getLinkToken, getToken } from '@/utils/auth'
 import DrillPath from '@/views/chart/view/DrillPath'
@@ -218,6 +630,9 @@ import Vue from 'vue'
 import { formatterItem, valueFormatter } from '@/views/chart/chart/formatter'
 import UserViewDialog from '@/components/canvas/customComponent/UserViewDialog'
 import UserViewMobileDialog from '@/components/canvas/customComponent/UserViewMobileDialog'
+import Crontab from '@/components/dispatch/Crontab/index'
+import msgCfm from '@/components/msgCfm/index'
+import GridTable from '@/components/gridTable/index.vue'
 
 export default {
   name: 'UserView',
@@ -227,14 +642,17 @@ export default {
     DeRichTextView,
     LabelNormalText,
     PluginCom,
+    GridTable,
     ChartComponentS2,
     EditBarView,
     ChartComponent,
     TableNormal,
     LabelNormal,
     DrillPath,
-    ChartComponentG2
+    ChartComponentG2,
+    Crontab
   },
+  mixins: [msgCfm],
   props: {
     inScreen: {
       type: Boolean,
@@ -308,16 +726,29 @@ export default {
   },
   data() {
     return {
+      paginationConfig: {
+        currentPage: 1,
+        pageSize: 10,
+        total: 0
+      },
+      layout: 'total, sizes, prev, pager, next, jumper',
+      predefineColors: COLOR_PANEL,
+      alarm: {},
+      jobLogList: [],
       imageDownloading: false,
       innerRefreshTimer: null,
+      dialogFormVisibleLog: false,
       mobileChartDetailsVisible: false,
       chartDetailsVisible: false,
+      chartAlarmVisible: false,
+      dialogFormVisibleCron: false,
       showChartInfo: {},
       showChartTableInfo: {},
       showChartInfoType: 'details',
       dataRowNameSelect: {},
       dataRowSelect: {},
       curFields: [],
+      indexList: [],
       isFirstLoad: true, // 是否是第一次加载
       refId: null,
       chart: BASE_CHART_STRING,
@@ -350,10 +781,35 @@ export default {
         pageSize: 20,
         show: 0
       },
-      view: {}
+      view: {},
+      alarmFormRules: {
+        cron: [
+          {
+            required: true,
+            message: this.$t('commons.input_content'),
+            trigger: 'blur'
+          }
+        ],
+        rules: { operate: [{
+          required: true,
+          message: this.$t('commons.input_content'),
+          trigger: 'blur'
+        }], type: [{
+          required: true,
+          message: this.$t('commons.input_content'),
+          trigger: 'blur'
+        }], value: [{
+          required: true,
+          message: this.$t('commons.input_content'),
+          trigger: 'blur'
+        }] }
+      },
+      options: {
+        sendType: ['飞书群组', '飞书个人', '邮箱', '电话'],
+        userList: []
+      }
     }
   },
-
   computed: {
     // 首次加载且非编辑状态新复制的视图，使用外部filter
     initLoad() {
@@ -475,7 +931,6 @@ export default {
       'curBatchOptComponents'
     ])
   },
-
   watch: {
     'innerPadding': {
       handler: function(val1, val2) {
@@ -553,8 +1008,10 @@ export default {
   mounted() {
     bus.$on('tab-canvas-change', this.tabSwitch)
     this.bindPluginEvent()
+    allUsers().then((res) => {
+      this.options.userList = res.data
+    })
   },
-
   beforeDestroy() {
     this.innerRefreshTimer && clearInterval(this.innerRefreshTimer)
     bus.$off('plugin-chart-click', this.pluginChartClick)
@@ -576,6 +1033,24 @@ export default {
     }
   },
   methods: {
+    openLog(row) {
+      this.dialogFormVisibleLog = true
+      this.jobLogList = []
+      const { currentPage, pageSize } = this.paginationConfig
+      logScheduler(currentPage, pageSize, { id: row.id }).then((res) => {
+        this.jobLogList = res.data.listObject
+        this.paginationConfig.total = res.data.itemCount
+      })
+    },
+    handleSizeChange(pageSize) {
+      this.paginationConfig.currentPage = 1
+      this.paginationConfig.pageSize = pageSize
+      this.openLog()
+    },
+    handleCurrentChange(currentPage) {
+      this.paginationConfig.currentPage = currentPage
+      this.openLog()
+    },
     tabSwitch(tabCanvasId) {
       if (this.charViewS2ShowFlag && tabCanvasId === this.canvasId && this.$refs[this.element.propValue.id]) {
         this.$refs[this.element.propValue.id].chartResize()
@@ -602,6 +1077,9 @@ export default {
     },
     exportExcel() {
       this.$refs['userViewDialog'].exportExcel()
+    },
+    exportJSON() {
+      this.$refs['userViewDialog'].exportJsonDownload()
     },
     exportViewImg() {
       this.imageDownloading = true
@@ -776,6 +1254,9 @@ export default {
           if (response.success) {
             this.chart = response.data
             this.view = response.data
+            if (typeof this.view.alarmColor !== 'undefined' && this.view.alarmColor !== null) {
+              this.$emit('set-alarm-color', this.view.alarmColor)
+            }
             if (this.chart.type.includes('table')) {
               this.$store.commit('setLastViewRequestInfo', { viewId: id, requestInfo: requestInfo })
             }
@@ -927,6 +1408,88 @@ export default {
       tableChart.customStyle = JSON.stringify(tableChart.customStyle)
 
       this.showChartInfo = this.chart
+      this.indexList = this.chart.data.fields.filter((x) => { return x.extField === 1 || x.extField === 2 })
+      const arr = []
+      if (typeof this.chart.data.series !== 'undefined') {
+        this.chart.data.series.forEach((item) => {
+          this.chart.data.fields.forEach((x) => {
+            if (x.name === item.name) {
+              arr.push(x)
+            }
+          })
+        })
+      }
+      arr.forEach((x) => {
+        let flag = true
+        this.indexList.forEach((y) => {
+          if (y.name === x.name) {
+            flag = false
+          }
+        })
+        if (flag) {
+          this.indexList.push(x)
+        }
+      })
+      if (typeof this.chart.yaxis !== 'undefined') {
+        var yarr = JSON.parse(this.chart.yaxis)
+        yarr.forEach((item) => {
+          var flag = true
+          this.indexList.forEach((x) => {
+            if (x.id === item.id) {
+              flag = false
+            }
+          })
+          if (flag) {
+            this.indexList.push(item)
+          }
+        })
+      }
+      listScheduler({ chartId: this.chart.id }).then(response => {
+        const list = response.data
+        const arr = []
+        this.indexList.forEach((y) => {
+          let flag = true
+          list.forEach((x) => {
+            const index = JSON.parse(x.indexField)
+            if (y.id === index.id) {
+              flag = false
+              x.name = y.name
+              if (typeof x.format === 'undefined') {
+                this.$set(x, 'format', 'yyyy-MM-dd')
+              }
+              if (typeof x.timeField === 'undefined') {
+                this.$set(x, 'timeField', { name: '' })
+              } else {
+                x.timeField = JSON.parse(x.timeField)
+              }
+              if (typeof x.timeNumber === 'undefined') {
+                this.$set(x, 'timeNumber', 1)
+              }
+              if (typeof x.timeType === 'undefined') {
+                this.$set(x, 'timeType', '天')
+              }
+              if (typeof x.sends === 'undefined') {
+                this.$set(x, 'sends', [])
+                x.sends.push({ type: '飞书群组' })
+              } else {
+                x.sends = JSON.parse(x.sends)
+              }
+              if (typeof x.rules === 'undefined') {
+                this.$set(x, 'rules', [])
+                x.rules.push({ type: '固定值', operate: '高于', color: '#FF4500' })
+              } else {
+                x.rules = JSON.parse(x.rules)
+              }
+              arr.push(x)
+            }
+          })
+          if (flag) {
+            const temp = { name: y.name, indexField: JSON.stringify(y) }
+            arr.push(temp)
+          }
+        })
+        this.indexList = arr
+      })
       this.showChartTableInfo = tableChart
       this.showChartInfoType = params.openType
       if (!this.inScreen) {
@@ -941,6 +1504,13 @@ export default {
         this.mobileChartDetailsVisible = true
       }
     },
+    closeCron() {
+      this.dialogFormVisibleCron = false
+    },
+    handleCron(cron) {
+      this.alarm.cron = cron
+      this.closeCron()
+    },
     chartClick(param) {
       if (this.drillClickDimensionList.length < this.chart.drillFields.length - 1) {
         (this.chart.type === 'map' || this.chart.type === 'buddle-map') && this.sendToChildren(param)
@@ -954,7 +1524,109 @@ export default {
         })
       }
     },
-
+    editAlarm(row) {
+      this.alarm = JSON.parse(JSON.stringify(row))
+      if (typeof this.alarm.format === 'undefined') {
+        this.$set(this.alarm, 'format', 'yyyy-MM-dd')
+      }
+      if (typeof this.alarm.timeField === 'undefined') {
+        this.$set(this.alarm, 'timeField', { name: '' })
+      }
+      if (typeof this.alarm.timeNumber === 'undefined') {
+        this.$set(this.alarm, 'timeNumber', 1)
+      }
+      if (typeof this.alarm.timeType === 'undefined') {
+        this.$set(this.alarm, 'timeType', '天')
+      }
+      if (typeof this.alarm.sends === 'undefined') {
+        this.$set(this.alarm, 'sends', [])
+        this.alarm.sends.push({ type: '飞书群组' })
+      }
+      if (typeof this.alarm.rules === 'undefined') {
+        this.$set(this.alarm, 'rules', [])
+        this.alarm.rules.push({ type: '固定值', operate: '高于' })
+      }
+      this.chartAlarmVisible = true
+    },
+    subAlarmSendType(index) {
+      this.alarm.sends.splice(index, 1)
+    },
+    addAlarmSendType() {
+      this.alarm.sends.push({ type: '飞书群组' })
+    },
+    subAlarmRuleType(index) {
+      this.alarm.rules.splice(index, 1)
+    },
+    addAlarmRuleType() {
+      this.alarm.rules.push({ type: '固定值', operate: '高于', color: '#FF4500' })
+    },
+    logOut() {
+      this.chartAlarmVisible = false
+    },
+    save() {
+      saveScheduler(this.chart.id, {
+        ...this.alarm,
+        timeField: JSON.stringify(this.alarm.timeField),
+        rules: JSON.stringify(this.alarm.rules),
+        sends: JSON.stringify(this.alarm.sends)
+      }).then((res) => {
+        const arr = []
+        const x = res.data
+        if (typeof x.indexField !== 'undefined') {
+          x.name = JSON.parse(x.indexField).name
+        }
+        if (typeof x.format === 'undefined') {
+          this.$set(x, 'format', 'yyyy-MM-dd')
+        }
+        if (typeof x.timeField === 'undefined') {
+          this.$set(x, 'timeField', { name: '' })
+        } else {
+          x.timeField = JSON.parse(x.timeField)
+        }
+        if (typeof x.timeNumber === 'undefined') {
+          this.$set(x, 'timeNumber', 1)
+        }
+        if (typeof x.timeType === 'undefined') {
+          this.$set(x, 'timeType', '天')
+        }
+        if (typeof x.sends === 'undefined') {
+          this.$set(x, 'sends', [])
+          x.sends.push({ type: '飞书群组' })
+        } else {
+          x.sends = JSON.parse(x.sends)
+        }
+        if (typeof x.rules === 'undefined') {
+          this.$set(x, 'rules', [])
+          x.rules.push({ type: '固定值', operate: '高于' })
+        } else {
+          x.rules = JSON.parse(x.rules)
+        }
+        arr.push(JSON.parse(JSON.stringify(x)))
+        this.indexList.forEach((y) => {
+          let flag = true
+          const index = JSON.parse(res.data.indexField)
+          if (JSON.parse(y.indexField).id === index.id) {
+            flag = false
+          }
+          if (flag) {
+            arr.push(y)
+          }
+        })
+        this.indexList = arr
+        this.chartAlarmVisible = false
+        this.openMessageSuccess('commons.save_success')
+      })
+    },
+    updateStatus(row) {
+      statusScheduler({ id: row.id, chartId: this.chart.id }).then((res) => {
+        if (res.data.type === 'success') {
+          this.openMessageSuccess(res.data.msg)
+        } else {
+          this.openMessageSuccess(res.data.msg, 'error')
+          row.status = false
+        }
+      })
+    },
     jumpClick(param) {
       let dimension, jumpInfo, sourceInfo
       // 如果有名称name 获取和name匹配的dimension 否则倒序取最后一个能匹配的
@@ -1054,7 +1726,6 @@ export default {
         })
       }
     },
-
     resetDrill() {
       const length = this.drillClickDimensionList.length
       this.drillClickDimensionList = []
@@ -1072,7 +1743,6 @@ export default {
         }
       }
     },
-
     drillJump(index) {
       const length = this.drillClickDimensionList.length
       this.drillClickDimensionList = this.drillClickDimensionList.slice(0, index)
@@ -1104,13 +1774,11 @@ export default {
         current && current.registerDynamicMap && this.setDetailMapCode(this.currentAcreaNode.code) && current.registerDynamicMap(this.currentAcreaNode.code)
       }
     },
-
     setDetailMapCode(code) {
       this.element.DetailAreaCode = code
       bus.$emit('set-dynamic-area-code', code)
       return true
     },
-
     // 切换下一级地图
     sendToChildren(param) {
       const length = param.data.dimensionList.length
@@ -1135,7 +1803,6 @@ export default {
         }
       }
     },
-
     findEntityByCode(code, array) {
       if (array === null || array.length === 0) array = this.places
       for (let index = 0; index < array.length; index++) {
@@ -1191,7 +1858,6 @@ export default {
       this.scaleTimeMachine && clearTimeout(this.scaleTimeMachine)
       this.scaleTimeMachine = null
     },
-
     // 边框变化
     chartResize(index) {
       if (this.$refs[this.element.propValue.id]) {
@@ -1205,7 +1871,6 @@ export default {
         }, 50)
       }
     },
-
     // 边框变化 修改视图内部参数
     chartScale(index) {
       if (this.$refs[this.element.propValue.id]) {
@@ -1217,7 +1882,6 @@ export default {
         }, 100)
       }
     },
-
     renderComponent() {
       return this.chart.render
     },
@@ -1287,6 +1951,43 @@ export default {
   height: 100%;
   overflow: hidden;
   position: relative;
+}
+
+.add-item {
+  display: flex;
+  align-items: center;
+  width: 100px;
+  margin-top: 16px;
+  margin-bottom: 30px;
+  color: #3d90ff;;
+  cursor: pointer;
+}
+
+.de-ds-form {
+  width: 100%;
+  height: 100%;
+
+  .de-ds-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 56px;
+    padding: 12px 24px;
+    //box-shadow: 0px 2px 4px rgba(31, 35, 41, 0.08);
+
+    .name {
+      font-family: 'PingFang SC';
+      font-style: normal;
+      font-weight: 500;
+      font-size: 16px;
+      line-height: 24px;
+      color: var(--deTextPrimary, #1f2329);
+    }
+
+    i {
+      cursor: pointer;
+    }
+  }
 }
 
 .chart-class {

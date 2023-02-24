@@ -110,6 +110,12 @@ public class SysUserController {
         return sysUserService.query(keyGridRequest);
     }
 
+    @ApiOperation("获取所有用户")
+    @GetMapping("/allUsers")
+    public List<SysUser> allUsers() {
+        return sysUserService.allUsers();
+    }
+
     @ApiOperation("创建用户")
     @RequiresPermissions("user:add")
     @PostMapping("/create")

@@ -80,6 +80,45 @@ export function ajaxGetDataOnly(id, panelId, data) {
   })
 }
 
+export function saveScheduler(id, data) {
+  return request({
+    url: '/chart/view/save/scheduler/' + id,
+    method: 'post',
+    loading: false,
+    hideMsg: true,
+    data
+  })
+}
+
+export function listScheduler(data) {
+  return request({
+    url: '/chart/view/scheduler/list',
+    method: 'post',
+    loading: false,
+    hideMsg: true,
+    data
+  })
+}
+
+export function statusScheduler(data) {
+  return request({
+    url: '/chart/view/scheduler/status',
+    method: 'post',
+    loading: false,
+    hideMsg: true,
+    data
+  })
+}
+
+export function logScheduler(page, size, data) {
+  return request({
+    url: '/chart/view/scheduler/log/' + page + '/' + size,
+    method: 'post',
+    loading: false,
+    data
+  })
+}
+
 export function pluginTypes() {
   return request({
     url: '/plugin/view/types',
@@ -153,7 +192,6 @@ export const viewOptions = panelId => {
   })
 }
 
-
 export function getDatasourceRelationship(id) {
   return request({
     url: `/api/relation/datasource/${id}`,
@@ -162,7 +200,6 @@ export function getDatasourceRelationship(id) {
   })
 }
 
-
 export function getDatasetRelationship(id) {
   return request({
     url: `/api/relation/dataset/${id}`,
@@ -170,7 +207,6 @@ export function getDatasetRelationship(id) {
     loading: true
   })
 }
-
 
 export function getPanelRelationship(id) {
   return request({

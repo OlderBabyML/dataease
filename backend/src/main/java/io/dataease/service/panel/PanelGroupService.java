@@ -903,6 +903,14 @@ public class PanelGroupService {
         return null;
     }
 
+    public PanelGroupWithBLOBs findPanelForChartId(String viewId) {
+        PanelView panelView = panelViewService.findByViewId(viewId);
+        if (panelView != null) {
+            return panelGroupMapper.selectByPrimaryKey(panelView.getPanelId());
+        }
+        return null;
+    }
+
     public PanelExport2App panelExport2AppCheck(String panelId) {
         //1.获取所有视图信息
         List<ChartViewWithBLOBs> chartViewsInfo = panelViewService.findByPanelId(panelId);

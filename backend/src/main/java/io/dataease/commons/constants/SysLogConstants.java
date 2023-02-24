@@ -34,7 +34,11 @@ public class SysLogConstants {
 
         BIND(16, "OPERATE_TYPE_BIND"),
 
-        UNBIND(17, "OPERATE_TYPE_UNBIND");
+        UNBIND(17, "OPERATE_TYPE_UNBIND"),
+
+        SUCCESS(30, "OPERATE_TYPE_SUCCESS"),
+
+        FAILED(31, "OPERATE_TYPE_FAILED");
         private Integer value;
         private String name;
 
@@ -69,7 +73,8 @@ public class SysLogConstants {
         ROLE(8, "SOURCE_TYPE_ROLE"),
         DRIVER(9, "SOURCE_TYPE_DRIVER"),
         DRIVER_FILE(10, "SOURCE_TYPE_DRIVER_FILE"),
-        MENU(11, "SOURCE_TYPE_MENU");
+        MENU(11, "SOURCE_TYPE_MENU"),
+        ALARM(20, "SOURCE_TYPE_ALARM");
         private Integer value;
         private String name;
 

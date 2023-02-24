@@ -85,7 +85,12 @@ router.beforeEach(async (to, from, next) => routeBefore(() => {
     if (to.path === '/login') {
       // if is logged in, redirect to the home page
       next({
-        path: '/'
+        path: '/panel/index'
+      })
+      NProgress.done()
+    } else if (to.path === '/') {
+      next({
+        path: '/panel/index'
       })
       NProgress.done()
     } else {

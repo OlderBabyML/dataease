@@ -22,6 +22,14 @@ export function userLists(page, size, data) {
   })
 }
 
+export function allUsers() {
+  return request({
+    url: '/api/user/allUsers',
+    method: 'get',
+    loading: true
+  })
+}
+
 export function userListsWithOutPage(data) {
   return request({
     url: pathMap.queryWithOutPagePath,

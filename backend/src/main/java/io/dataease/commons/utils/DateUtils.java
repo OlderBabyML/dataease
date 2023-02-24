@@ -26,6 +26,11 @@ public class DateUtils {
         return dateFormat.format(date);
     }
 
+    public static String getDateString(long date, String format) throws Exception {
+        SimpleDateFormat dateFormat = new SimpleDateFormat(format);
+        return dateFormat.format(new Date(date));
+    }
+
     public static String getDateString(long timeStamp) throws Exception {
         SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_PATTERM);
         return dateFormat.format(timeStamp);

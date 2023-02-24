@@ -94,17 +94,17 @@
               </de-btn>
             </span>
 
-            <span
-              v-if="showType !== 1"
-              style="float: right;margin-right: 10px"
-            >
-              <de-btn
-                secondary
-                @click="share"
-              >
-                {{ $t('panel.share') }}
-              </de-btn>
-            </span>
+            <!--            <span-->
+            <!--              v-if="showType !== 1"-->
+            <!--              style="float: right;margin-right: 10px"-->
+            <!--            >-->
+            <!--              <de-btn-->
+            <!--                secondary-->
+            <!--                @click="share"-->
+            <!--              >-->
+            <!--                {{ $t('panel.share') }}-->
+            <!--              </de-btn>-->
+            <!--            </span>-->
 
             <span
               v-if="panelInfo.status==='publish' && !isOtherPlatform"
@@ -166,6 +166,14 @@
                       class="preview-icon-svg"
                     />
                     {{ $t('panel.save_to_panel') }}
+                  </el-dropdown-item>
+
+                  <el-dropdown-item>
+                    <svg-icon
+                      icon-class="warn-tree"
+                      class="preview-icon-svg"
+                    />
+                    {{ $t('panel.setting_clock') }}
                   </el-dropdown-item>
 
                   <el-dropdown-item

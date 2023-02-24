@@ -260,11 +260,39 @@ export default {
     setLastMapChart(data) {
       this.lastMapChart = JSON.parse(JSON.stringify(data))
     },
+    exportJsonDownload(snapshot, width, height) {
+      const jsonData = []
+      this.chart.data.tableRow.map((item) => {
+        const a = {}
+        this.chart.data.fields.map((i) => {
+          this.$set(a, i.name, item[i.dataeaseName])
+        })
+        jsonData.push(a)
+      })
+      const excelName = this.chart.name
+      const blob = new Blob([JSON.stringify(jsonData)], { type: 'application/vnd.ms-excel' })
+      const link = document.createElement('a')
+      link.style.display = 'none'
+      link.href = URL.createObjectURL(blob)
+      link.download = excelName + '.json' // 下载的文件名
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+    },
     exportExcelDownload(snapshot, width, height) {
       const excelHeader = JSON.parse(JSON.stringify(this.chart.data.fields)).map(item => item.name)
       const excelTypes = JSON.parse(JSON.stringify(this.chart.data.fields)).map(item => item.deType)
       const excelHeaderKeys = JSON.parse(JSON.stringify(this.chart.data.fields)).map(item => item.dataeaseName)
       let excelData = JSON.parse(JSON.stringify(this.chart.data.tableRow)).map(item => excelHeaderKeys.map(i => item[i]))
+      const jsonData = []
+      this.chart.data.tableRow.map((item) => {
+        const a = {}
+        this.chart.data.fields.map((i) => {
+          this.$set(a, i.name, item[i.dataeaseName])
+        })
+        jsonData.push(a)
+      })
+      console.log(jsonData)
       const excelName = this.chart.name
       let detailFields = []
       if (this.chart.data.detailFields?.length) {
@@ -325,7 +353,6 @@ export default {
         document.body.removeChild(link)
       })
     },
-
     renderComponent() {
       return this.chart.render
     }
