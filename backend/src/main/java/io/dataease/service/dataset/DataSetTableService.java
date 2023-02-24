@@ -512,6 +512,13 @@ public class DataSetTableService {
         return extDataSetTableMapper.searchOne(dataSetTableRequest);
     }
 
+    public DataSetTableDTO getWithPermission(String id) {
+        DataSetTableRequest dataSetTableRequest = new DataSetTableRequest();
+        dataSetTableRequest.setId(id);
+        dataSetTableRequest.setTypeFilter(dataSetTableRequest.getTypeFilter());
+        return extDataSetTableMapper.searchOne(dataSetTableRequest);
+    }
+
     public List<TableField> getFields(DatasetTable datasetTable) throws Exception {
         Datasource ds = datasourceMapper.selectByPrimaryKey(datasetTable.getDataSourceId());
         Provider datasourceProvider = ProviderFactory.getProvider(ds.getType());

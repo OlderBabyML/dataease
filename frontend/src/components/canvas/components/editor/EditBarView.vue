@@ -12,6 +12,15 @@
       </span>
       <span
         v-show="detailsShow"
+        :title="$t('panel.setting_clock')"
+      >
+        <i
+          class="icon iconfont icon-kexuejishu"
+          @click.stop="showViewDetails('details')"
+        />
+      </span>
+      <span
+        v-show="detailsShow"
         :title="$t('panel.details')"
       >
         <i

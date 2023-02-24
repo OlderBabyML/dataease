@@ -80,6 +80,11 @@ public class SysUserService {
         return lists;
     }
 
+    public List<SysUser> allUsers() {
+        SysUserExample sysUserExample = new SysUserExample();
+        return sysUserMapper.selectByExample(sysUserExample);
+    }
+
     @Transactional
     public int save(SysUserCreateRequest request) {
         request.setUsername(request.getUsername().trim());

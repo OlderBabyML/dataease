@@ -380,6 +380,18 @@ public class ScheduleManager {
         return jobDataMap;
     }
 
+    public void pauseJob(JobKey jobKey) throws SchedulerException {
+        scheduler.pauseJob(jobKey);
+    }
+
+    public void resumeJob(JobKey jobKey) throws SchedulerException {
+        scheduler.resumeJob(jobKey);
+    }
+
+    public Trigger.TriggerState getTriggerState(TriggerKey triggerKey) throws SchedulerException {
+        return scheduler.getTriggerState(triggerKey);
+    }
+
     public Object getCurrentlyExecutingJobs() {
         Map<String, String> returnMap = new HashMap<>();
         try {

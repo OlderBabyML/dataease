@@ -20,6 +20,7 @@ import io.dataease.exception.DataEaseException;
 import io.dataease.ext.ExtSysLogMapper;
 import io.dataease.ext.query.GridExample;
 import io.dataease.i18n.Translator;
+import io.dataease.plugins.common.base.domain.SchedulerIndexWithBLOBs;
 import io.dataease.plugins.common.base.domain.SysLogExample;
 import io.dataease.plugins.common.base.domain.SysLogWithBLOBs;
 import io.dataease.plugins.common.base.mapper.SysLogMapper;
@@ -95,6 +96,20 @@ public class LogService {
         sysLogMapper.deleteByExample(example);
     }
 
+    public List<SysLogWithBLOBs> queryForSourceId(String id) {
+        SysLogExample sysLogExample = new SysLogExample();
+        sysLogExample.createCriteria().andSourceIdEqualTo(id);
+        return sysLogMapper.selectByExampleWithBLOBs(sysLogExample);
+    }
+
+    public List<SysLogWithBLOBs> queryForSourceIdPage(String id, Integer goPage, Integer pageSize) {
+        SysLogExample sysLogExample = new SysLogExample();
+        sysLogExample.createCriteria().andSourceIdEqualTo(id);
+        sysLogExample.setGoPage(goPage);
+        sysLogExample.setPageSize(pageSize);
+        return sysLogMapper.selectByExampleWithBLOBs(sysLogExample);
+    }
+
 
     public KeyGridRequest logRetentionProxy(KeyGridRequest request) {
         String value = systemParameterService.getValue(ParamConstants.BASIC.LOG_TIME_OUT.getValue());
@@ -158,6 +173,7 @@ public class LogService {
         List<SysLogGridDTO> dtos = voLogs.stream().map(this::convertDTO).collect(Collectors.toList());
         return dtos;
     }
+
 
     private KeyGridRequest detailRequest(KeyGridRequest request) {
         List<ConditionEntity> conditions = request.getConditions();
@@ -350,6 +366,19 @@ public class LogService {
         sysLogMapper.insert(sysLogWithBLOBs);
     }
 
+    public void saveAlarmLog(SysLogDTO sysLogDTO) {
+        SysLogWithBLOBs sysLogWithBLOBs = BeanUtils.copyBean(new SysLogWithBLOBs(), sysLogDTO);
+        if (CollectionUtils.isNotEmpty(sysLogDTO.getPositions())) {
+            sysLogWithBLOBs.setPosition(gson.toJson(sysLogDTO.getPositions()));
+        }
+        if (CollectionUtils.isNotEmpty(sysLogDTO.getRemarks())) {
+            sysLogWithBLOBs.setRemark(gson.toJson(sysLogDTO.getRemarks()));
+        }
+        sysLogWithBLOBs.setTime(System.currentTimeMillis());
+        sysLogWithBLOBs.setIp(IPUtils.get());
+
+        sysLogMapper.insert(sysLogWithBLOBs);
+    }
 
     public void exportExcel(KeyGridRequest request) throws Exception {
         request = logRetentionProxy(request);

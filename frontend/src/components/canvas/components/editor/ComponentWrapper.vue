@@ -69,6 +69,7 @@
         :canvas-style-data="canvasStyleData"
         :show-position="showPosition"
         @fill-chart-2-parent="setChartData"
+        @set-alarm-color="setAlarmColor"
       />
     </div>
   </div>
@@ -152,6 +153,7 @@ export default {
     return {
       previewVisible: false,
       chart: null,
+      alarmColor: '',
       seriesIdMap: {
         id: ''
       }
@@ -185,7 +187,11 @@ export default {
         style['border-radius'] = (this.config.commonBackground.borderRadius || 0) + 'px'
         let colorRGBA = ''
         if (this.config.commonBackground.backgroundColorSelect) {
-          colorRGBA = hexColorToRGBA(this.config.commonBackground.color, this.config.commonBackground.alpha)
+          if (this.alarmColor !== '') {
+            colorRGBA = hexColorToRGBA(this.alarmColor, this.config.commonBackground.alpha)
+          } else {
+            colorRGBA = hexColorToRGBA(this.config.commonBackground.color, this.config.commonBackground.alpha)
+          }
         }
         if (this.config.commonBackground.enable) {
           if (this.screenShot && this.config.commonBackground.backgroundType === 'innerImage' && typeof this.config.commonBackground.innerImage === 'string') {
@@ -223,6 +229,9 @@ export default {
     runAnimation(this.$el, this.config.animations)
   },
   methods: {
+    setAlarmColor(color) {
+      this.alarmColor = color
+    },
     getComponentId() {
       return this.config.id
     },
@@ -287,7 +296,7 @@ export default {
       } else {
         return {
           ...
-            getStyle(style, ['top', 'left', 'width', 'height', 'rotate']),
+          getStyle(style, ['top', 'left', 'width', 'height', 'rotate']),
           position: 'relative'
         }
       }

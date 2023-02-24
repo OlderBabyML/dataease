@@ -2155,6 +2155,7 @@ export default {
     to_default_panel: 'Save To Default Dashboard',
     store: 'Favorites',
     save_to_panel: 'Save to template',
+    setting_clock: 'Setting Clock',
     export_to_panel: 'Export to template',
     export_to_pdf: 'Export to PDF',
     export_to_img: 'Export to Image',

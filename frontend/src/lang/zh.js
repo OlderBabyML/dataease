@@ -2150,6 +2150,7 @@ export default {
     to_default_panel: '另存为默认仪表板',
     store: '收藏',
     save_to_panel: '保存为模板',
+    setting_clock: '设置报警',
     export_to_panel: '导出为模板',
     export_to_pdf: '导出为PDF',
     export_to_img: '导出为图片',

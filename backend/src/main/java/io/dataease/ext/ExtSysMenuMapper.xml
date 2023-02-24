@@ -27,7 +27,7 @@
         FROM
         sys_menu
         WHERE
-        type &lt;= 1 AND hidden =0
+        type &lt;= 1
         AND (
         sys_menu.menu_id != 100
         OR EXISTS (

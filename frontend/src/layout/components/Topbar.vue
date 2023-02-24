@@ -16,39 +16,42 @@
         alt=""
         style="padding-top: 10px;"
       >
+      <span style="color: #0095ff;margin:0;padding: 0; line-height: 56px;height: 56px;display: block">Polaris</span>
     </div>
-    <el-menu
-      class="de-top-menu"
-      mode="horizontal"
-      :style="{'margin-left': '260px', 'position': 'absolute'}"
-      active-text-color="#FFFFFF"
-      :default-active="activeMenu"
-      @select="handleSelect"
-    >
-      <div
-        v-for="item in permission_routes"
-        v-if="item.path !== '/ds-form' && item.path !== '/dataset-form' && item.path !== '/person-info' && item.path !== '/task-ds-form'"
-        :key="item.path"
-        class="nav-item"
+    <div style="width: 800px">
+      <el-menu
+        class="de-top-menu"
+        mode="horizontal"
+        :style="{'margin-left': '100px', 'position': 'absolute'}"
+        active-text-color="#FFFFFF"
+        :default-active="activeMenu"
+        :router="false"
+        @select="handleSelect"
       >
-        <app-link :to="resolvePath(item)">
-          <el-menu-item
-            v-if="!item.hidden"
-            :index="item.path"
-          >
-            {{ item.meta ? item.meta.title : item.children[0].meta.title }}
-          </el-menu-item>
-        </app-link>
-      </div>
-    </el-menu>
-
+        <div
+          v-for="item in permission_routes"
+          v-if="item.path !== '/ds-form' && item.path !== '/dataset-form' && item.path !== '/person-info' && item.path !== '/task-ds-form'"
+          :key="item.path"
+          class="nav-item"
+        >
+          <app-link :to="resolvePath(item)">
+            <el-menu-item
+              v-if="!item.hidden"
+              :index="item.path"
+            >
+              {{ item.meta ? item.meta.title : item.children[0].meta.title }}
+            </el-menu-item>
+          </app-link>
+        </div>
+      </el-menu>
+    </div>
     <div
       class="right-menu"
       style="color: var(--TopTextColor)"
     >
+      <user-query class="right-menu-item hover-effect" />
       <notification class="right-menu-item hover-effect" />
       <lang-select class="right-menu-item hover-effect" />
-
       <el-dropdown
         ref="my-drop"
         class="top-dropdown"
@@ -62,36 +65,36 @@
           <span style="max-width:80px;white-space:nowrap;text-overflow:ellipsis;overflow:hidden;">{{ name }}</span>
           <span><i class="el-icon-arrow-down el-icon--right" /></span>
         </div>
-        <el-dropdown-menu slot="dropdown">
-          <router-link to="/person-info/index">
-            <el-dropdown-item>{{ $t('commons.personal_info') }}</el-dropdown-item>
-          </router-link>
+        <el-dropdown-menu />
+        <!--        <el-dropdown-menu slot="dropdown">-->
+        <!--          <router-link to="/person-info/index">-->
+        <!--            <el-dropdown-item>{{ $t('commons.personal_info') }}</el-dropdown-item>-->
+        <!--          </router-link>-->
 
-          <router-link
-            v-if="$store.getters.validate"
-            to="/ukey/index"
-          >
-            <el-dropdown-item>{{ $t('commons.ukey_title') }}</el-dropdown-item>
-          </router-link>
+        <!--          <router-link-->
+        <!--            v-if="$store.getters.validate"-->
+        <!--            to="/ukey/index"-->
+        <!--          >-->
+        <!--            <el-dropdown-item>{{ $t('commons.ukey_title') }}</el-dropdown-item>-->
+        <!--          </router-link>-->
 
-          <router-link
-            v-if="!isOtherPlatform"
-            to="/person-pwd/index"
-          >
-            <el-dropdown-item>{{ $t('user.change_password') }}</el-dropdown-item>
-          </router-link>
+        <!--          <router-link-->
+        <!--            v-if="!isOtherPlatform"-->
+        <!--            to="/person-pwd/index"-->
+        <!--          >-->
+        <!--            <el-dropdown-item>{{ $t('user.change_password') }}</el-dropdown-item>-->
+        <!--          </router-link>-->
 
-          <el-dropdown-item
-            v-if="!isOtherPlatform"
-            divided
-            @click.native="logout"
-          >
-            <span style="display:block;">{{ $t('commons.exit_system') }}</span>
-          </el-dropdown-item>
-        </el-dropdown-menu>
+        <!--          <el-dropdown-item-->
+        <!--            v-if="!isOtherPlatform"-->
+        <!--            divided-->
+        <!--            @click.native="logout"-->
+        <!--          >-->
+        <!--            <span style="display:block;">{{ $t('commons.exit_system') }}</span>-->
+        <!--          </el-dropdown-item>-->
+        <!--        </el-dropdown-menu>-->
       </el-dropdown>
     </div>
-
     <!--模板市场全屏显示框-->
     <el-dialog
       :visible="templateMarketShow"
@@ -116,6 +119,7 @@ import AppLink from './Sidebar/Link'
 import variables from '@/styles/variables.scss'
 import { isExternal } from '@/utils/validate'
 import Notification from '@/components/notification'
+import UserQuery from '@/components/userQuery'
 import bus from '@/utils/bus'
 import LangSelect from '@/components/langSelect'
 import { getSysUI } from '@/utils/auth'
@@ -129,8 +133,8 @@ export default {
     TemplateMarket,
     AppLink,
     Notification,
-    LangSelect
-
+    LangSelect,
+    UserQuery
   },
   props: {
     showTips: {

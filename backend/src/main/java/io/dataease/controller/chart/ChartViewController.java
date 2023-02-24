@@ -1,19 +1,29 @@
 package io.dataease.controller.chart;
 
+import com.alibaba.fastjson.JSONObject;
+import com.github.pagehelper.Page;
+import com.github.pagehelper.PageHelper;
 import com.github.xiaoymin.knife4j.annotations.ApiSupport;
 import io.dataease.auth.annotation.DePermission;
 import io.dataease.auth.annotation.DePermissionProxy;
 import io.dataease.commons.constants.DePermissionType;
 import io.dataease.commons.constants.ResourceAuthLevel;
+import io.dataease.commons.utils.PageUtils;
+import io.dataease.commons.utils.Pager;
 import io.dataease.controller.request.chart.*;
 import io.dataease.controller.response.ChartDetail;
 import io.dataease.dto.chart.ChartViewDTO;
 import io.dataease.dto.chart.ViewOption;
+import io.dataease.job.sechedule.ScheduleManager;
 import io.dataease.plugins.common.base.domain.ChartViewWithBLOBs;
+import io.dataease.plugins.common.base.domain.SchedulerIndexWithBLOBs;
+import io.dataease.plugins.common.base.domain.SysLogWithBLOBs;
 import io.dataease.service.chart.ChartViewCacheService;
 import io.dataease.service.chart.ChartViewService;
+import io.dataease.service.sys.log.LogService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import org.quartz.SchedulerException;
 import org.springframework.web.bind.annotation.*;
 import springfox.documentation.annotations.ApiIgnore;
 
@@ -36,11 +46,41 @@ public class ChartViewController {
     @Resource
     private ChartViewCacheService chartViewCacheService;
 
+    @Resource
+    private LogService logService;
+
     @DePermission(type = DePermissionType.PANEL, level = ResourceAuthLevel.PANEL_LEVEL_MANAGE)
     @ApiOperation("保存")
     @PostMapping("/save/{panelId}")
     public ChartViewDTO save(@PathVariable String panelId, @RequestBody ChartViewRequest request) {
         return chartViewService.save(request);
+    }
+
+    @ApiOperation("保存报警")
+    @PostMapping("/save/scheduler/{id}")
+    public SchedulerIndexWithBLOBs saveScheduler(@PathVariable String id, @RequestBody SchedulerIndexWithBLOBs request) throws SchedulerException {
+        request.setChartId(id);
+        return chartViewService.saveScheduler(request);
+    }
+
+    @ApiOperation("改变报警状态")
+    @PostMapping("/scheduler/status")
+    public JSONObject statusScheduler(@RequestBody SchedulerIndexWithBLOBs request) throws SchedulerException {
+        return chartViewService.statusScheduler(request);
+    }
+
+    @ApiOperation("查询报警")
+    @PostMapping("/scheduler/list")
+    public List<SchedulerIndexWithBLOBs> listScheduler(@RequestBody SchedulerIndexWithBLOBs request) throws SchedulerException {
+        return chartViewService.listScheduler(request);
+    }
+
+    @ApiOperation("查询报警日志")
+    @PostMapping("/scheduler/log/{goPage}/{pageSize}")
+    public Pager<List<SysLogWithBLOBs>> logScheduler(@PathVariable int goPage, @PathVariable int pageSize, @RequestBody SchedulerIndexWithBLOBs request) {
+        Page<Object> page = PageHelper.startPage(goPage, pageSize, true);
+        List<SysLogWithBLOBs> sysLogWithBLOBs = logService.queryForSourceId(request.getId().toString());
+        return PageUtils.setPageInfo(page, sysLogWithBLOBs);
     }
 
     @DePermission(type = DePermissionType.PANEL, level = ResourceAuthLevel.PANEL_LEVEL_MANAGE)

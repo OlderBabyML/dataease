@@ -2148,6 +2148,7 @@ export default {
     to_default_panel: '另存爲默認儀表闆',
     store: '收藏',
     save_to_panel: '保存爲模闆',
+    setting_clock: '设置报警',
     export_to_panel: '導出爲模闆',
     export_to_pdf: '導出爲PDF',
     export_to_img: '導出爲圖片',
