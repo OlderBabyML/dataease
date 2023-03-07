@@ -2,6 +2,7 @@ package io.dataease.provider.datasource;
 
 import com.alibaba.druid.pool.DruidDataSource;
 import com.alibaba.druid.pool.DruidPooledConnection;
+import com.alibaba.fastjson.JSONObject;
 import com.google.gson.Gson;
 import io.dataease.commons.utils.LogUtil;
 import io.dataease.dto.datasource.*;
@@ -21,6 +22,7 @@ import io.dataease.plugins.datasource.query.QueryProvider;
 import io.dataease.provider.ProviderFactory;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
+
 import javax.annotation.Resource;
 import java.lang.reflect.Method;
 import java.sql.*;
@@ -302,6 +304,37 @@ public class JdbcProvider extends DefaultJdbcProvider {
         return list;
     }
 
+    private List<JSONObject> getJsonResult(ResultSet rs) throws Exception {
+        List<JSONObject> lists = new ArrayList<>();
+        ResultSetMetaData metaData = rs.getMetaData();
+        int columnCount = metaData.getColumnCount();
+        while (rs.next()) {
+            for (int i = 1; i <= columnCount; i++) {
+                JSONObject jsonObject = new JSONObject();
+                String columnLabel = rs.getMetaData().getColumnLabel(i);
+                jsonObject.put("name", columnLabel);
+                jsonObject.put("value", rs.getObject(i));
+                lists.add(jsonObject);
+            }
+        }
+        return lists;
+    }
+
+    private List<JSONObject> getJsonRowResult(ResultSet rs) throws Exception {
+        List<JSONObject> lists = new ArrayList<>();
+        ResultSetMetaData metaData = rs.getMetaData();
+        int columnCount = metaData.getColumnCount();
+        while (rs.next()) {
+            JSONObject jsonObject = new JSONObject();
+            for (int i = 1; i <= columnCount; i++) {
+                String columnLabel = rs.getMetaData().getColumnLabel(i);
+                jsonObject.put(columnLabel, rs.getObject(i));
+            }
+            lists.add(jsonObject);
+        }
+        return lists;
+    }
+
     private List<TableField> fetchResultField(ResultSet rs, DatasourceRequest datasourceRequest) throws Exception {
         List<TableField> fieldList = new ArrayList<>();
         ResultSetMetaData metaData = rs.getMetaData();
@@ -333,6 +366,34 @@ public class JdbcProvider extends DefaultJdbcProvider {
             fieldList.add(field);
         }
         return fieldList;
+    }
+
+    public List<JSONObject> getJsonData(DatasourceRequest dsr) throws Exception {
+        List<JSONObject> lists = new ArrayList<>();
+        JdbcConfiguration jdbcConfiguration = new Gson().fromJson(dsr.getDatasource().getConfiguration(), JdbcConfiguration.class);
+        int queryTimeout = jdbcConfiguration.getQueryTimeout() > 0 ? jdbcConfiguration.getQueryTimeout() : 0;
+        try (Connection connection = getConnectionFromPool(dsr); Statement stat = getStatement(connection, queryTimeout); ResultSet rs = stat.executeQuery(dsr.getQuery())) {
+            lists = getJsonResult(rs);
+        } catch (SQLException e) {
+            DataEaseException.throwException("SQL ERROR" + e.getMessage());
+        } catch (Exception e) {
+            DataEaseException.throwException("Data source connection exception: " + e.getMessage());
+        }
+        return lists;
+    }
+
+    public List<JSONObject> getJsonRowData(DatasourceRequest dsr) {
+        List<JSONObject> lists = new ArrayList<>();
+        JdbcConfiguration jdbcConfiguration = new Gson().fromJson(dsr.getDatasource().getConfiguration(), JdbcConfiguration.class);
+        int queryTimeout = jdbcConfiguration.getQueryTimeout() > 0 ? jdbcConfiguration.getQueryTimeout() : 0;
+        try (Connection connection = getConnectionFromPool(dsr); Statement stat = getStatement(connection, queryTimeout); ResultSet rs = stat.executeQuery(dsr.getQuery())) {
+            lists = getJsonRowResult(rs);
+        } catch (SQLException e) {
+            DataEaseException.throwException("SQL ERROR" + e.getMessage());
+        } catch (Exception e) {
+            DataEaseException.throwException("Data source connection exception: " + e.getMessage());
+        }
+        return lists;
     }
 
     @Override

@@ -260,12 +260,32 @@ export default {
     setLastMapChart(data) {
       this.lastMapChart = JSON.parse(JSON.stringify(data))
     },
+    isJSON(str) {
+      if (typeof str === 'string') {
+        try {
+          var obj = JSON.parse(str)
+          if (typeof obj === 'object' && obj) {
+            return true
+          } else {
+            return false
+          }
+        } catch (e) {
+          console.log('error：' + str + '!!!' + e)
+          return false
+        }
+      }
+      console.log('It is not a string!')
+    },
     exportJsonDownload(snapshot, width, height) {
       const jsonData = []
       this.chart.data.tableRow.map((item) => {
         const a = {}
         this.chart.data.fields.map((i) => {
-          this.$set(a, i.name, item[i.dataeaseName])
+          if (this.isJSON(item[i.dataeaseName])) {
+            this.$set(a, i.name, JSON.parse(item[i.dataeaseName]))
+          } else {
+            this.$set(a, i.name, item[i.dataeaseName])
+          }
         })
         jsonData.push(a)
       })

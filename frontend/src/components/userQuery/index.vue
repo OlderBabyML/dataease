@@ -39,7 +39,7 @@
         </el-select>
         <el-select
           v-model="attr"
-          style="width: 200px"
+          style="width: 140px"
         >
           <el-option
             v-for="(item,index) in attrList"
@@ -53,7 +53,7 @@
         </el-select>
         <el-select
           v-model="operator"
-          style="width: 200px"
+          style="width: 100px"
         >
           <el-option
             v-for="(item,index) in operatorList"
@@ -110,7 +110,8 @@ export default {
   },
   methods: {
     openSearch() {
-      this.dialogVisible = true
+      this.$router.push({ path: '/user-query-detail/index' })
+      // this.dialogVisible = true
     },
     openUserQuery() {
       this.$router.push({ path: '/user-query-detail/index' })

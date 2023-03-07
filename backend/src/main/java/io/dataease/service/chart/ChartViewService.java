@@ -1619,7 +1619,7 @@ public class ChartViewService {
         for (ChartFieldCustomFilterDTO chartFieldCustomFilterDTO : fieldCustomFilter) {
             chartFieldCustomFilterDTO.setFilter(chartCustomFilterItemDTOS);
         }
-        List<ChartViewFieldDTO> drill = gson.fromJson(view.getDrillFields(), tokenType);
+        //List<ChartViewFieldDTO> drill = gson.fromJson(view.getDrillFields(), tokenType);
 
         // 视图计算字段，用dataeaseName作为唯一标识
         ChartViewField chartViewField = new ChartViewField();
@@ -1643,7 +1643,7 @@ public class ChartViewService {
         fieldCustomFilter = fieldCustomFilter.stream().filter(item -> chartViewFieldNameList.contains(item.getDataeaseName()) || (!desensitizationList.keySet().contains(item.getDataeaseName()) && dataeaseNames.contains(item.getDataeaseName()))).collect(Collectors.toList());
         extStack = extStack.stream().filter(item -> chartViewFieldNameList.contains(item.getDataeaseName()) || (!desensitizationList.keySet().contains(item.getDataeaseName()) && dataeaseNames.contains(item.getDataeaseName()))).collect(Collectors.toList());
         extBubble = extBubble.stream().filter(item -> chartViewFieldNameList.contains(item.getDataeaseName()) || (!desensitizationList.keySet().contains(item.getDataeaseName()) && dataeaseNames.contains(item.getDataeaseName()))).collect(Collectors.toList());
-        drill = drill.stream().filter(item -> chartViewFieldNameList.contains(item.getDataeaseName()) || (!desensitizationList.keySet().contains(item.getDataeaseName()) && dataeaseNames.contains(item.getDataeaseName()))).collect(Collectors.toList());
+        //drill = drill.stream().filter(item -> chartViewFieldNameList.contains(item.getDataeaseName()) || (!desensitizationList.keySet().contains(item.getDataeaseName()) && dataeaseNames.contains(item.getDataeaseName()))).collect(Collectors.toList());
 
         //行权限
         List<DataSetRowPermissionsTreeDTO> rowPermissionsTree = permissionsTreeService.getRowPermissionsTree(fields, table, null);
@@ -2065,8 +2065,6 @@ public class ChartViewService {
             }
         }
 
-        // 构建结果
-        Map<String, Object> map = new TreeMap<>();
         // 图表组件可再扩展
         Map<String, Object> mapChart = new HashMap<>();
         if (StringUtils.equalsIgnoreCase(view.getRender(), "echarts")) {

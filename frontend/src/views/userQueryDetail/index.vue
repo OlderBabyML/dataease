@@ -3,6 +3,7 @@
     style="position: relative;width: 100%;height: 100%;overflow: hidden;"
   >
     <div
+      v-if="userDialogVisible"
       style="position: relative;height: 100%;overflow: hidden;background: #f0f2f5;"
     >
       <div
@@ -12,7 +13,14 @@
           <div style="width: 100%;font-size: 14px">
             <div style="z-index: 1000;display: flex;justify-content: space-between;height: 51px;padding: 0 50px 0 24px;line-height: 50px;background: #fff;border-right: 1px solid #e4e2ea;border-bottom: 1px solid #edf0f2;">
               <span>用户细查</span>
-              <span style="cursor: pointer;"><i class="el-icon-refresh-right" />刷新数据</span>
+              <span
+                style="cursor: pointer;"
+                @click="openDialog"
+              ><i class="el-icon-search" />重新选择用户</span>
+              <span
+                style="cursor: pointer;"
+                @click="closeUserQuery"
+              ><i class="el-icon-refresh-right" />刷新数据</span>
             </div>
           </div>
         </div>
@@ -20,6 +28,10 @@
           style="display: flex;flex: 1 1;width: 100%;height: 0;"
         >
           <div
+            v-loading="userInfoLoading"
+            element-loading-text="加载中"
+            element-loading-spinner="el-icon-loading"
+            element-loading-background="rgba(0, 0, 0, 0.8)"
             style="z-index: 99;width: 328px;height: calc(100vh - 64px);background-color: #edf0f2;"
           >
             <div style="height: calc(100vh - 100px);overflow-y: auto;background-color: #FFFFFF;">
@@ -60,6 +72,7 @@
                     align="right"
                     :clearable="false"
                     :editable="false"
+                    @change="reloadAll"
                   />
                 </span>
                 <div style="height: 36px;background: #FFFFFF;">
@@ -71,13 +84,21 @@
                       placement="bottom"
                       trigger="click"
                     >
-                      <el-tree
-                        :data="totalOption"
-                        show-checkbox
-                        node-key="id"
-                        :default-checked-keys="[5,6]"
-                        :props="defaultProps"
-                      />
+                      <div style="height: 180px; overflow-y: auto">
+                        <el-input
+                          v-model="filterText"
+                          placeholder="输入埋点名进行过滤"
+                        />
+                        <el-tree
+                          ref="tree"
+                          :data="totalOption"
+                          show-checkbox
+                          node-key="id"
+                          :filter-node-method="filterNode"
+                          :default-checked-keys="defaultTree"
+                          :props="defaultProps"
+                        />
+                      </div>
                       <el-button
                         size="mini"
                         @click="totalFlag = false"
@@ -85,7 +106,7 @@
                       <el-button
                         type="primary"
                         size="mini"
-                        @click="totalFlag = false"
+                        @click="reloadAll"
                       >确认</el-button>
                       <template slot="reference">
                         <span style="margin-right: 10px;cursor: pointer;"><i class="el-icon-plus" />事件</span>
@@ -112,9 +133,24 @@
                       />
                     </div>
                   </div>
-                  <div style="display: flex;justify-content: space-between;height: 350px;margin-top: 10px;margin-bottom: 10px;padding: 18px 15px 0;">
+                  <div
+                    v-show="showChart"
+                    style="display: flex;justify-content: center;align-items: center;height: 100%"
+                  >
+                    <el-progress
+                      type="circle"
+                      :percentage="percentage"
+                    />
+                  </div>
+                  <div
+                    v-show="!showChart"
+                    style="display: flex;justify-content: space-between;height: 350px;margin-top: 10px;margin-bottom: 10px;padding: 18px 15px 0;"
+                  >
                     <div
-                      :style="boardDivColor"
+                      :style="{
+                        'height': '350px',
+                        'width': chartWidth
+                      }"
                     >
                       <div
                         :id="id"
@@ -147,13 +183,21 @@
                         placement="bottom"
                         trigger="click"
                       >
-                        <el-tree
-                          :data="option"
-                          show-checkbox
-                          node-key="id"
-                          :default-checked-keys="[5,6]"
-                          :props="defaultProps"
-                        />
+                        <div style="height: 180px; overflow-y: auto">
+                          <el-input
+                            v-model="filterDetailText"
+                            placeholder="输入埋点名进行过滤"
+                          />
+                          <el-tree
+                            ref="treeDetail"
+                            :data="option"
+                            show-checkbox
+                            node-key="id"
+                            :filter-node-method="filterDetailNode"
+                            :default-checked-keys="defaultTreeDetail"
+                            :props="defaultProps"
+                          />
+                        </div>
                         <el-button
                           size="mini"
                           @click="eventFlag = false"
@@ -161,7 +205,7 @@
                         <el-button
                           type="primary"
                           size="mini"
-                          @click="eventFlag = false"
+                          @click="reloadTimeLine"
                         >确认</el-button>
                         <template slot="reference">
                           <span style="display: flex;align-items: center;height: 32px;cursor: pointer"><i class="el-icon-location-outline" />定位事件</span>
@@ -169,32 +213,63 @@
                       </el-popover>
                     </div>
                   </div>
-                  <div style="display: flex;background-color: #f6f8fa;">
-                    <div style="width: 100%;height: auto;padding: 12px 24px;overflow: hidden;transition: .2s;">
-                      <div style="display: flex;margin: 5px 0;">
-                        <span style="font-weight: bold;font-size:14px;display: inline-block;height: 20px;margin-right: 5px;color: #42546d;white-space: nowrap;">2023-02-22</span></div>
+                  <div
+                    v-show="showTimeline"
+                    style="display: flex;justify-content: center;align-items: center;height: 300px"
+                  >
+                    <el-progress
+                      type="circle"
+                      :percentage="percentageDetail"
+                    />
+                  </div>
+                  <div
+                    v-for="(item,index) in timeList"
+                    v-show="!showTimeline"
+                    :key="index"
+                    style="display: flex;background-color: #f6f8fa;"
+                  >
+                    <div
+                      style="width: 100%;height: auto;padding: 12px 24px;overflow: hidden;transition: .2s;"
+                    >
+                      <div
+                        style="display: flex;margin: 5px 0;"
+                      >
+                        <span style="font-weight: bold;font-size:14px;display: inline-block;height: 20px;margin-right: 5px;color: #42546d;white-space: nowrap;">{{ item.date }}</span></div>
                       <timeline
-                        v-for="(item,index) in eventList"
-                        :key="index"
-                        :index-arr="index"
-                        :is-show="item.isShow"
-                        :data-list="item.dataList"
-                        :timestamp="item.timestamp"
-                        @openPanel="openPanel"
+                        v-for="(event,i) in item.eventList"
+                        :key="i"
+                        :index-arr="i"
+                        :is-show="event.isShow"
+                        :data-list="event.dataList"
+                        :timestamp="event.timestamp"
+                        @openPanel="openPanel(index,i)"
                       >
                         <span class="content">
                           <i
-                            v-if="!item.isShow"
+                            v-if="!event.isShow"
                             class="el-icon-arrow-right"
                           />
                           <i
                             v-else
                             class="el-icon-arrow-down"
                           />
-                          {{ item.name }}
+                          {{ event.name }}
                         </span>
                       </timeline>
                     </div>
+                  </div>
+                  <div
+                    v-show="!isTotal && !showTimeline"
+                    style="display: flex;align-items: center;justify-content: center;height: 40px;cursor: pointer;"
+                    @click="pageTimeLine"
+                  >
+                    加载更多
+                  </div>
+                  <div
+                    v-show="isTotal && !showTimeline"
+                    style="display: flex;align-items: center;justify-content: center;height: 40px;"
+                  >
+                    已加载全部
                   </div>
                 </div>
               </div>
@@ -203,73 +278,200 @@
         </div>
       </div>
     </div>
+    <el-dialog
+      :visible.sync="dialogVisible"
+      :destroy-on-close="true"
+      :append-to-body="true"
+      :show-close="true"
+      :close-on-click-modal="false"
+      width="40%"
+    >
+      <template #title>
+        <i class="el-icon-user" />
+        用户细查
+      </template>
+      <div>
+        <el-select
+          v-model="product"
+          style="width: 120px"
+        >
+          <el-option
+            v-for="(item,index) in productList"
+            :key="index"
+            :label="item"
+            :value="item"
+          >
+            <i class="el-icon-goblet-square" />
+            <span>{{ item }}</span>
+          </el-option>
+        </el-select>
+        <el-select
+          v-model="attr"
+          style="width: 140px"
+        >
+          <el-option
+            v-for="(item,index) in userAttrList"
+            :key="index"
+            :label="item.label"
+            :value="item.value"
+          >
+            <i class="el-icon-user" />
+            <span>{{ item.label }}</span>
+          </el-option>
+        </el-select>
+        <el-select
+          v-model="operator"
+          style="width: 100px"
+        >
+          <el-option
+            v-for="(item,index) in operatorList"
+            :key="index"
+            :label="item.label"
+            :value="item.value"
+          />
+        </el-select>
+        <el-input
+          v-model="attrValue"
+          style="width: 200px"
+        />
+        <el-button
+          class="right-menu-item"
+          type="primary"
+          @click="searchUserList"
+        >搜索</el-button>
+      </div>
+      <div
+        v-loading="userListLoading"
+        element-loading-text="加载中"
+        element-loading-spinner="el-icon-loading"
+        element-loading-background="rgba(0, 0, 0, 0.8)"
+      >
+        <el-table
+          height="400"
+          :data="userList"
+          style="width: 100%"
+        >
+          <el-table-column
+            prop="id"
+            :label="attr"
+          />
+          <el-table-column
+            label="userId"
+          >
+            <template slot-scope="{row}">
+              <el-link
+                type="primary"
+                @click="enterQuery(row)"
+              >{{ row.userId }}</el-link>
+            </template>
+          </el-table-column>
+        </el-table>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
 <script>
+import {
+  getOptions,
+  getUserEventDetail,
+  getUserEventDetailForDate,
+  getUserEventNum,
+  getUserInfo,
+  getUserList
+} from '@/api/userQuery/index'
 import Timeline from '@/components/timeline/index'
 
 export default {
   components: { Timeline },
   data() {
     return {
+      filterText: '',
+      filterDetailText: '',
+      userId: null,
+      userListLoading: false,
+      isTotal: false,
+      showChart: true,
+      showTimeline: true,
+      pageNo: 1,
+      percentage: 15,
+      percentageDetail: 15,
+      userInfoLoading: false,
+      attrValue: '',
+      attr: 'userId',
+      userAttrList: [{ label: 'user_id', value: 'userId' }, { label: 'uid', value: 'uid' }, { label: 'country', value: 'country' }],
+      productList: ['Mico', 'Yoho'],
+      operatorList: [{ label: '等于', value: '=' }],
+      operator: '=',
+      product: 'Mico',
+      userList: [],
       totalFlag: false,
       eventFlag: false,
       sortOperator: 'desc',
       totalOption: [{
-        id: 1,
+        id: 'server',
         label: '服务端埋点',
         children: [{
-          id: 4,
+          type: 'server',
+          id: 'game_ludo_game_start_skin',
           label: 'game_ludo_game_start_skin'
         }]
       }, {
-        id: 2,
+        id: 'client',
         label: '客户端埋点',
         children: [{
-          id: 5,
+          type: 'client',
+          id: 'game_ludo_PlayMode_click',
           label: 'game_ludo_PlayMode_click'
         }, {
-          id: 6,
-          label: 'guessing_select_gift_confirm'
+          type: 'client',
+          id: 'game_ludo_box_rewardshow',
+          label: 'game_ludo_box_rewardshow'
         }]
       }, {
-        id: 3,
+        id: 'h5',
         label: 'H5埋点',
         children: [{
-          id: 7,
-          label: 'open_notify_pk_invite'
+          type: 'h5',
+          id: 'activity_worldcup_homepage_show',
+          label: 'activity_worldcup_homepage_show'
         }, {
-          id: 8,
-          label: 'live_room_room_exit'
+          type: 'h5',
+          id: 'game_gold_TeenPatt_show',
+          label: 'game_gold_TeenPatt_show'
         }]
       }, {
-        id: 4,
+        id: 'technology',
         label: '技术埋点',
         children: [{
-          id: 9,
-          label: 'open_notify_pk_invite'
+          type: 'technology',
+          id: 'apm_app_start',
+          label: 'apm_app_start'
         }, {
-          id: 10,
-          label: 'live_room_room_exit'
+          type: 'technology',
+          id: 'apm_app_end',
+          label: 'apm_app_end'
+        }, {
+          type: 'technology',
+          id: 'dynamic_distribution',
+          label: 'dynamic_distribution'
+        }, {
+          type: 'technology',
+          id: 'appinit',
+          label: 'appinit'
+        }, {
+          type: 'technology',
+          id: 'enter_room_api_optimization',
+          label: 'enter_room_api_optimization'
         }]
       }],
-      option: [{
-        id: 2,
-        label: '客户端埋点',
-        children: [{
-          id: 5,
-          label: 'game_ludo_PlayMode_click'
-        }, {
-          id: 6,
-          label: 'guessing_select_gift_confirm'
-        }]
-      }],
+      option: [],
       defaultProps: {
         children: 'children',
         label: 'label'
       },
-      dialogVisible: false,
+      dialogVisible: true,
+      userDialogVisible: false,
       id: 'test123124',
       pieId: 'test1233131222124',
       switchValue: false,
@@ -286,7 +488,7 @@ export default {
           {
             name: '事件分布',
             type: 'pie',
-            radius: ['40%', '70%'],
+            radius: ['30%', '60%'],
             avoidLabelOverlap: false,
             itemStyle: {
               borderRadius: 10,
@@ -340,8 +542,13 @@ export default {
             type: 'bar',
             barWidth: '25%',
             label: { show: false, position: 'top' },
-            itemStyle: { color: '#3daae3' },
-            data: [10, 52, 200, 334, 390, 330, 220]
+            data: [{ value: 10, itemStyle: { color: '#3daae3' }},
+              { value: 52, itemStyle: { color: '#3daae3' }},
+              { value: 200, itemStyle: { color: '#3daae3' }},
+              { value: 334, itemStyle: { color: '#3daae3' }},
+              { value: 390, itemStyle: { color: '#3daae3' }},
+              { value: 330, itemStyle: { color: '#3daae3' }},
+              { value: 220, itemStyle: { color: '#3daae3' }}]
           }
         ]
       },
@@ -401,124 +608,378 @@ export default {
         new Date(Date.now() - 60 * 1000 * 60 * 24 * 7),
         new Date(Date.now())
       ],
-      eventList: [{
-        isShow: false,
-        timestamp: '21:36:34.886',
-        name: 'game_ludo_game_start_skin',
-        dataList: [
-          { name: 'device_id', value: '85abfa7acc6a148a' },
-          { name: 'uid', value: '10004' },
-          { name: 'user_id', value: '10004' },
-          { name: 'afid', value: '1672168744524-5752931834308158480' },
-          { name: 'sys_version', value: 'android-8.1.0' },
-          { name: 'os', value: 'android' },
-          { name: 'vc', value: '1110900' },
-          { name: 'vn', value: '8.0.0.0' },
-          { name: 'ip', value: '197.59.135.38' },
-          { name: 'timezone', value: '2' },
-          { name: 'mcc', value: '602' },
-          { name: 'pkg_name', value: 'com.mico' },
-          { name: 'extra', value: '{"CheckerboardSkin_id":"100001","ChessSkin_id":"100001","uid":"1435579224160337920","DiceSkin_id":"200005"}' },
-          { name: 'bus', value: 'game' },
-          { name: 'client_timestamp', value: '1675243102338' },
-          { name: 'locale', value: 'en_US' },
-          { name: 'model', value: 'EVR-L29' }
-        ]
-      }, {
-        isShow: false,
-        timestamp: '20:21:34.866',
-        name: 'game_ludo_PlayMode_click',
-        dataList: [
-          { name: 'device_id', value: '85abfa7acc6a148a' },
-          { name: 'uid', value: '10004' },
-          { name: 'user_id', value: '10004' },
-          { name: 'afid', value: '1672168744524-5752931834308158480' },
-          { name: 'sys_version', value: 'android-8.1.0' },
-          { name: 'os', value: 'android' },
-          { name: 'vc', value: '1110900' },
-          { name: 'vn', value: '8.0.0.0' },
-          { name: 'ip', value: '197.59.135.38' },
-          { name: 'timezone', value: '2' },
-          { name: 'mcc', value: '602' },
-          { name: 'pkg_name', value: 'com.mico' },
-          { name: 'extra', value: '{"CheckerboardSkin_id":"100001","ChessSkin_id":"100001","uid":"1435579224160337920","DiceSkin_id":"200005"}' },
-          { name: 'bus', value: 'game' },
-          { name: 'client_timestamp', value: '1675243102338' },
-          { name: 'locale', value: 'en_US' },
-          { name: 'model', value: 'EVR-L29' }
-        ]
-      }, {
-        isShow: false,
-        timestamp: '18:30:34.060',
-        name: 'guessing_select_gift_confirm',
-        dataList: [
-          { name: 'device_id', value: '85abfa7acc6a148a' },
-          { name: 'uid', value: '10004' },
-          { name: 'user_id', value: '10004' },
-          { name: 'afid', value: '1672168744524-5752931834308158480' },
-          { name: 'sys_version', value: 'android-8.1.0' },
-          { name: 'os', value: 'android' },
-          { name: 'vc', value: '1110900' },
-          { name: 'vn', value: '8.0.0.0' },
-          { name: 'ip', value: '197.59.135.38' },
-          { name: 'timezone', value: '2' },
-          { name: 'mcc', value: '602' },
-          { name: 'pkg_name', value: 'com.mico' },
-          { name: 'extra', value: '{"CheckerboardSkin_id":"100001","ChessSkin_id":"100001","uid":"1435579224160337920","DiceSkin_id":"200005"}' },
-          { name: 'bus', value: 'game' },
-          { name: 'client_timestamp', value: '1675243102338' },
-          { name: 'locale', value: 'en_US' },
-          { name: 'model', value: 'EVR-L29' }
-        ]
-      }, {
-        isShow: false,
-        timestamp: '18:26:31.786',
-        name: 'open_notify_pk_invite',
-        dataList: [
-          { name: 'device_id', value: '85abfa7acc6a148a' },
-          { name: 'uid', value: '10004' },
-          { name: 'user_id', value: '10004' },
-          { name: 'afid', value: '1672168744524-5752931834308158480' },
-          { name: 'sys_version', value: 'android-8.1.0' },
-          { name: 'os', value: 'android' },
-          { name: 'vc', value: '1110900' },
-          { name: 'vn', value: '8.0.0.0' },
-          { name: 'ip', value: '197.59.135.38' },
-          { name: 'timezone', value: '2' },
-          { name: 'mcc', value: '602' },
-          { name: 'pkg_name', value: 'com.mico' },
-          { name: 'extra', value: '{"CheckerboardSkin_id":"100001","ChessSkin_id":"100001","uid":"1435579224160337920","DiceSkin_id":"200005"}' },
-          { name: 'bus', value: 'game' },
-          { name: 'client_timestamp', value: '1675243102338' },
-          { name: 'locale', value: 'en_US' },
-          { name: 'model', value: 'EVR-L29' }
-        ]
-      }]
+      timeList: [
+        {
+          date: '2023-03-01',
+          eventList: [{
+            isShow: false,
+            timestamp: '21:36:34.886',
+            name: 'game_ludo_game_start_skin',
+            dataList: [
+              { name: 'device_id', value: '85abfa7acc6a148a' },
+              { name: 'uid', value: '10004' },
+              { name: 'user_id', value: '10004' },
+              { name: 'afid', value: '1672168744524-5752931834308158480' },
+              { name: 'sys_version', value: 'android-8.1.0' },
+              { name: 'os', value: 'android' },
+              { name: 'vc', value: '1110900' },
+              { name: 'vn', value: '8.0.0.0' },
+              { name: 'ip', value: '197.59.135.38' },
+              { name: 'timezone', value: '2' },
+              { name: 'mcc', value: '602' },
+              { name: 'pkg_name', value: 'com.mico' },
+              { name: 'extra', value: '{"CheckerboardSkin_id":"100001","ChessSkin_id":"100001","uid":"1435579224160337920","DiceSkin_id":"200005"}' },
+              { name: 'bus', value: 'game' },
+              { name: 'client_timestamp', value: '1675243102338' },
+              { name: 'locale', value: 'en_US' },
+              { name: 'model', value: 'EVR-L29' }
+            ]
+          }, {
+            isShow: false,
+            timestamp: '20:21:34.866',
+            name: 'game_ludo_PlayMode_click',
+            dataList: [
+              { name: 'device_id', value: '85abfa7acc6a148a' },
+              { name: 'uid', value: '10004' },
+              { name: 'user_id', value: '10004' },
+              { name: 'afid', value: '1672168744524-5752931834308158480' },
+              { name: 'sys_version', value: 'android-8.1.0' },
+              { name: 'os', value: 'android' },
+              { name: 'vc', value: '1110900' },
+              { name: 'vn', value: '8.0.0.0' },
+              { name: 'ip', value: '197.59.135.38' },
+              { name: 'timezone', value: '2' },
+              { name: 'mcc', value: '602' },
+              { name: 'pkg_name', value: 'com.mico' },
+              { name: 'extra', value: '{"CheckerboardSkin_id":"100001","ChessSkin_id":"100001","uid":"1435579224160337920","DiceSkin_id":"200005"}' },
+              { name: 'bus', value: 'game' },
+              { name: 'client_timestamp', value: '1675243102338' },
+              { name: 'locale', value: 'en_US' },
+              { name: 'model', value: 'EVR-L29' }
+            ]
+          }, {
+            isShow: false,
+            timestamp: '18:30:34.060',
+            name: 'guessing_select_gift_confirm',
+            dataList: [
+              { name: 'device_id', value: '85abfa7acc6a148a' },
+              { name: 'uid', value: '10004' },
+              { name: 'user_id', value: '10004' },
+              { name: 'afid', value: '1672168744524-5752931834308158480' },
+              { name: 'sys_version', value: 'android-8.1.0' },
+              { name: 'os', value: 'android' },
+              { name: 'vc', value: '1110900' },
+              { name: 'vn', value: '8.0.0.0' },
+              { name: 'ip', value: '197.59.135.38' },
+              { name: 'timezone', value: '2' },
+              { name: 'mcc', value: '602' },
+              { name: 'pkg_name', value: 'com.mico' },
+              { name: 'extra', value: '{"CheckerboardSkin_id":"100001","ChessSkin_id":"100001","uid":"1435579224160337920","DiceSkin_id":"200005"}' },
+              { name: 'bus', value: 'game' },
+              { name: 'client_timestamp', value: '1675243102338' },
+              { name: 'locale', value: 'en_US' },
+              { name: 'model', value: 'EVR-L29' }
+            ]
+          }, {
+            isShow: false,
+            timestamp: '18:26:31.786',
+            name: 'open_notify_pk_invite',
+            dataList: [
+              { name: 'device_id', value: '85abfa7acc6a148a' },
+              { name: 'uid', value: '10004' },
+              { name: 'user_id', value: '10004' },
+              { name: 'afid', value: '1672168744524-5752931834308158480' },
+              { name: 'sys_version', value: 'android-8.1.0' },
+              { name: 'os', value: 'android' },
+              { name: 'vc', value: '1110900' },
+              { name: 'vn', value: '8.0.0.0' },
+              { name: 'ip', value: '197.59.135.38' },
+              { name: 'timezone', value: '2' },
+              { name: 'mcc', value: '602' },
+              { name: 'pkg_name', value: 'com.mico' },
+              { name: 'extra', value: '{"CheckerboardSkin_id":"100001","ChessSkin_id":"100001","uid":"1435579224160337920","DiceSkin_id":"200005"}' },
+              { name: 'bus', value: 'game' },
+              { name: 'client_timestamp', value: '1675243102338' },
+              { name: 'locale', value: 'en_US' },
+              { name: 'model', value: 'EVR-L29' }
+            ]
+          }]
+        }
+      ],
+      tree: null,
+      treeDetail: null,
+      currentDate: '',
+      defaultTree: ['technology'],
+      defaultTreeDetail: []
     }
   },
-  computed: {
-    boardDivColor() {
-      const style = {
-        height: '350px',
-        width: this.chartWidth
-      }
-      return style
+  watch: {
+    filterText(val) {
+      this.$refs.tree.filter(val)
+    },
+    filterDetailText(val) {
+      this.$refs.treeDetail.filter(val)
     }
   },
   mounted() {
-    this.myChart = this.$echarts.getInstanceByDom(document.getElementById(this.id))
-    if (!this.myChart) {
-      this.myChart = this.$echarts.init(document.getElementById(this.id))
-    }
-    setTimeout(this.myChart.setOption(this.chart, true), 500)
+    this.$nextTick(() => {
+      this.$store.dispatch('app/toggleSideBarHide', true)
+    })
+    this.getOptions()
   },
   methods: {
-    openPanel(index) {
-      this.eventList[index].isShow = !this.eventList[index].isShow
+    filterNode(value, data) {
+      if (!value) return true
+      return data.label.indexOf(value) !== -1
+    },
+    filterDetailNode(value, data) {
+      if (!value) return true
+      return data.label.indexOf(value) !== -1
+    },
+    barProcess() {
+      setTimeout(() => {
+        if (this.percentage <= 80) {
+          this.percentage = this.percentage + 15
+        }
+      }, 5000)
+      setTimeout(() => {
+        if (this.percentage <= 80) {
+          this.percentage = this.percentage + 15
+        }
+      }, 10000)
+      setTimeout(() => {
+        if (this.percentage <= 80) {
+          this.percentage = this.percentage + 15
+        }
+      }, 15000)
+      setTimeout(() => {
+        if (this.percentage <= 80) {
+          this.percentage = this.percentage + 15
+        }
+      }, 25000)
+      setTimeout(() => {
+        if (this.percentage <= 80) {
+          this.percentage = this.percentage + 15
+        }
+      }, 35000)
+    },
+    barDetailProcess() {
+      setTimeout(() => {
+        if (this.percentageDetail <= 80) {
+          this.percentageDetail = this.percentageDetail + 15
+        }
+      }, 5000)
+      setTimeout(() => {
+        if (this.percentageDetail <= 80) {
+          this.percentageDetail = this.percentageDetail + 15
+        }
+      }, 10000)
+      setTimeout(() => {
+        if (this.percentageDetail <= 80) {
+          this.percentageDetail = this.percentageDetail + 15
+        }
+      }, 15000)
+      setTimeout(() => {
+        if (this.percentageDetail <= 80) {
+          this.percentageDetail = this.percentageDetail + 15
+        }
+      }, 25000)
+      setTimeout(() => {
+        if (this.percentageDetail <= 80) {
+          this.percentageDetail = this.percentageDetail + 15
+        }
+      }, 35000)
+    },
+    getTreeCheckedNodes() {
+      this.option = this.$refs.tree.getCheckedNodes().filter(x => {
+        if (typeof x.children === 'undefined') { return true }
+      })
+      this.defaultTreeDetail = this.$refs.tree.getCheckedKeys()
+    },
+    getTreeDetailCheckedNodes() {
+      console.log(this.$refs.treeDetail.getCheckedNodes())
+    },
+    openPanel(index, i) {
+      this.timeList[index].eventList[i].isShow = !this.timeList[index].eventList[i].isShow
+    },
+    searchUserList() {
+      this.userListLoading = true
+      if (this.attrValue !== '') {
+        getUserList({ [this.attr]: this.attrValue, product: this.product }).then(response => {
+          this.userList = response.data
+          this.userListLoading = false
+        })
+      }
+    },
+    getOptions() {
+      getOptions({ product: this.product }).then(response => {
+        this.totalOption = response.data
+      })
+    },
+    closeUserQuery() {
+      this.isTotal = false
+      this.showChart = true
+      this.showTimeline = true
+      this.pageNo = 1
+      this.percentag = 15
+      this.percentageDetail = 15
+      this.userDialogVisible = true
+      this.dialogVisible = false
+      this.chartWidth = '100%'
+      this.pageNo = 1
+      setTimeout(() => {
+        this.showChart = true
+        this.getTreeCheckedNodes()
+        if (this.attrValue !== '') {
+          // getUserInfo({ userId: this.userId, product: this.product }).then(response => {
+          //   this.attrList = response.data
+          //   this.userInfoLoading = false
+          // })
+          const op = this.$refs.tree.getCheckedNodes().filter(x => {
+            if (typeof x.children === 'undefined') { return true }
+          })
+          getUserEventNum({ userId: this.userId, product: this.product, startTime: this.dateRange[0].getTime(),
+            endTime: this.dateRange[1].getTime(), eventList: op }).then(response => {
+            this.showChart = false
+            this.myChart = this.$echarts.getInstanceByDom(document.getElementById(this.id))
+            if (!this.myChart) {
+              this.myChart = this.$echarts.init(document.getElementById(this.id))
+              this.myChart.on('click', (params) => {
+                this.chart.series[0].data[params.dataIndex].itemStyle.color = '#3daae3'
+                this.chart.series[0].data.forEach((x, index) => {
+                  if (index !== params.dataIndex) {
+                    x.itemStyle.color = '#b1ddf4'
+                  }
+                })
+                this.myChart.setOption(this.chart, true)
+                this.myChart.resize()
+                this.pageNo = 1
+                this.eventFlag = false
+                this.showTimeline = true
+                this.percentageDetail = 15
+                this.barDetailProcess()
+                const op = this.$refs.treeDetail.getCheckedNodes()
+                this.currentDate = params.name
+                getUserEventDetailForDate({ userId: this.userId, product: this.product,
+                  date: params.name, eventList: op, sort: this.sortOperator, pageNo: this.pageNo }).then(response => {
+                  this.showTimeline = false
+                  this.timeList = response.data
+                })
+              })
+            }
+            this.chart.xAxis[0].data = response.data.x
+            this.chart.series[0].data = response.data.y.map((x) => {
+              return { value: x, itemStyle: { color: '#3daae3' }}
+            })
+            this.pieOptions.series[0].data = response.data.pip
+            this.myChart.setOption(this.chart, true)
+            this.myChart.resize({ height: 350, width: window.innerWidth - 328 })
+          })
+          getUserEventDetail({ userId: this.userId, product: this.product, startTime: this.dateRange[0].getTime(),
+            endTime: this.dateRange[1].getTime(), eventList: op, sort: this.sortOperator, pageNo: this.pageNo }).then(response => {
+            this.showTimeline = false
+            this.timeList = response.data
+          })
+        } else {
+          this.userInfoLoading = false
+        }
+        this.barProcess()
+        this.barDetailProcess()
+      }, 200)
+    },
+    enterQuery(row) {
+      this.userId = row.userId
+      this.attrList = row.userInfo
+      this.closeUserQuery()
+    },
+    reloadChart() {
+      this.getTreeCheckedNodes()
+      this.showChart = true
+      this.switchPieValue = false
+      this.percentage = 15
+      this.barProcess()
+      const op = this.$refs.tree.getCheckedNodes().filter(x => {
+        if (typeof x.children === 'undefined') { return true }
+      })
+      getUserEventNum({ userId: this.userId, product: this.product, startTime: this.dateRange[0].getTime(),
+        endTime: this.dateRange[1].getTime(), eventList: op }).then(response => {
+        this.showChart = false
+        this.chart.xAxis[0].data = response.data.x
+        this.chart.series[0].data = response.data.y.map((x) => {
+          return { value: x, itemStyle: { color: '#3daae3' }}
+        })
+        this.pieOptions.series[0].data = response.data.pip
+        this.myChart.setOption(this.chart, true)
+        this.myChart.resize({ height: 350, width: window.innerWidth - 328 })
+      })
+    },
+    reloadTimeLine() {
+      this.eventFlag = false
+      this.showTimeline = true
+      this.percentageDetail = 15
+      this.barDetailProcess()
+      this.pageNo = 1
+      const op = this.$refs.treeDetail.getCheckedNodes()
+      if (this.currentDate !== '') {
+        getUserEventDetailForDate({ userId: this.userId, product: this.product,
+          date: this.currentDate, eventList: op, sort: this.sortOperator, pageNo: this.pageNo }).then(response => {
+          this.showTimeline = false
+          this.timeList = response.data
+        })
+      } else {
+        getUserEventDetail({ userId: this.userId, product: this.product, startTime: this.dateRange[0].getTime(),
+          endTime: this.dateRange[1].getTime(), eventList: op, sort: this.sortOperator, pageNo: this.pageNo }).then(response => {
+          this.showTimeline = false
+          this.timeList = response.data
+        })
+      }
+    },
+    pageTimeLine() {
+      this.eventFlag = false
+      this.showTimeline = true
+      this.percentageDetail = 15
+      this.barDetailProcess()
+      const op = this.$refs.treeDetail.getCheckedNodes()
+      this.pageNo = this.pageNo + 1
+      if (this.currentDate !== '') {
+        getUserEventDetailForDate({ userId: this.userId, product: this.product,
+          date: this.currentDate, eventList: op, sort: this.sortOperator, pageNo: this.pageNo }).then(response => {
+          this.showTimeline = false
+          if (response.data.length === 0) {
+            this.isTotal = true
+          } else {
+            response.data.forEach(x => {
+              this.timeList.push(x)
+            })
+          }
+        })
+      } else {
+        getUserEventDetail({ userId: this.userId, product: this.product, startTime: this.dateRange[0].getTime(),
+          endTime: this.dateRange[1].getTime(), eventList: op, sort: this.sortOperator, pageNo: this.pageNo }).then(response => {
+          this.showTimeline = false
+          if (response.data.length === 0) {
+            this.isTotal = true
+          } else {
+            response.data.forEach(x => {
+              this.timeList.push(x)
+            })
+          }
+        })
+      }
+    },
+    reloadAll() {
+      this.totalFlag = false
+      this.reloadChart()
+      setTimeout(() => {
+        this.reloadTimeLine()
+      }, 100)
     },
     showNumber() {
       this.chart.series[0].label.show = this.switchValue
-      setTimeout(this.myChart.setOption(this.chart, true), 200)
+      setTimeout(() => {
+        this.myChart.setOption(this.chart, true)
+        this.myChart.resize()
+      }, 200)
     },
     sortOption() {
       if (this.sortOperator === 'desc') {
@@ -526,6 +987,7 @@ export default {
       } else {
         this.sortOperator = 'desc'
       }
+      this.reloadTimeLine()
     },
     showPie() {
       if (this.switchPieValue) {
@@ -535,15 +997,23 @@ export default {
           if (!this.myPieChart) {
             this.myPieChart = this.$echarts.init(document.getElementById(this.pieId))
             this.myPieChart.setOption(this.pieOptions, true)
+            this.myPieChart.resize()
           }
         }, 200)
+        setTimeout(() => {
+          this.myChart.setOption(this.chart, true)
+          this.myChart.resize({ height: 350, width: window.innerWidth - 328 - 450 })
+        }, 300)
       } else {
         this.chartWidth = '100%'
+        setTimeout(() => {
+          this.myChart.setOption(this.chart, true)
+          this.myChart.resize({ height: 350, width: window.innerWidth - 328 })
+        }, 300)
       }
-      setTimeout(() => {
-        this.myChart.setOption(this.chart, true)
-        this.myChart.resize()
-      }, 300)
+    },
+    openDialog() {
+      this.dialogVisible = true
     }
   }
 }

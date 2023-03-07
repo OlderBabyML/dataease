@@ -13,6 +13,8 @@ public class RuleAndSend implements Serializable {
     private List<SysUser> users;
     private String link;
 
+    private Integer numDay;
+
     public RuleAndSend() {
     }
 
@@ -62,5 +64,13 @@ public class RuleAndSend implements Serializable {
 
     public void setColor(String color) {
         this.color = color;
+    }
+
+    public Integer getNumDay() {
+        return numDay;
+    }
+
+    public void setNumDay(Integer numDay) {
+        this.numDay = numDay;
     }
 }

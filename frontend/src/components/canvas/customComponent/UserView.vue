@@ -149,7 +149,7 @@
           {{ $t('chart.export_img') }}
         </el-button>
         <el-button
-          v-if="showChartInfoType==='details' && hasDataPermission('export',panelInfo.privileges)"
+          v-if="showChartInfoType==='details'"
           size="mini"
           @click="exportJSON"
         >
@@ -279,6 +279,7 @@
                 {{ alarm.name }}
               </el-form-item>
               <el-form-item
+                v-if="typeof chart.data !== 'undefined' && typeof chart.data.sourceFields !== 'undefined'"
                 label="时间字段"
               >
                 <el-select
@@ -386,7 +387,6 @@
               <el-form-item
                 v-for="(item,index) in alarm.rules"
                 :key="index"
-                prop="rules"
                 :label="'规则'+ (index + 1)"
               >
                 <div style="display: flex;justify-content: left">
@@ -406,18 +406,35 @@
                   </el-select>
                   <el-select
                     v-model="item.type"
-                    style="width: 100px"
+                    style="width: 170px"
                     placeholder="请选择"
                   >
                     <el-option
                       label="固定值"
                       value="固定值"
                     />
+                    <el-option
+                      label="环比过去N天平均值"
+                      value="环比过去N天平均值"
+                    />
+                    <el-option
+                      label="同比上月同期"
+                      value="同比上月同期"
+                    />
                   </el-select>
+                  <span v-show="item.type === '环比过去N天平均值'">
+                    <el-input
+                      v-model="item.numDay"
+                      type="number"
+                      style="width: 70px"
+                    />天
+                  </span>
                   <el-input
                     v-model="item.value"
                     style="width: 160px"
                   />
+                </div>
+                <div style="display: flex;justify-content: left">
                   报警时图表背景颜色：
                   <el-color-picker
                     v-model="item.color"
