@@ -16,6 +16,11 @@ public class DateUtils {
         SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_PATTERM);
         return dateFormat.parse(dateString);
     }
+
+    public static Date getDate(String dateString, String format) throws Exception {
+        SimpleDateFormat dateFormat = new SimpleDateFormat(format);
+        return dateFormat.parse(dateString);
+    }
     public static Date getTime(String timeString) throws Exception {
         SimpleDateFormat dateFormat = new SimpleDateFormat(TIME_PATTERN);
         return dateFormat.parse(timeString);

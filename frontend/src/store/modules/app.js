@@ -4,10 +4,10 @@ const state = {
   sidebar: {
     opened: Cookies.get('sidebarStatus') ? !!+Cookies.get('sidebarStatus') : true,
     withoutAnimation: false,
-    hide: false
+    hide: true
   },
   device: 'desktop',
-
+  topbar: Cookies.get('topbar') || true,
   size: Cookies.get('size') || 'small'
 }
 
@@ -36,6 +36,10 @@ const mutations = {
   SET_SIZE: (state, size) => {
     state.size = size
     Cookies.set('size', size)
+  },
+  SET_TOP_BAR: (state, flag) => {
+    state.topbar = flag
+    Cookies.set('topbar', flag)
   }
 }
 
@@ -54,6 +58,9 @@ const actions = {
   },
   setSize({ commit }, size) {
     commit('SET_SIZE', size)
+  },
+  setTopBar({ commit }, flag) {
+    commit('SET_TOP_BAR', flag)
   }
 }
 

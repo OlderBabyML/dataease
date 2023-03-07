@@ -194,7 +194,15 @@ export default {
       return []
     }
   },
+  created() {
+    this.$nextTick(() => {
+      this.$store.dispatch('app/toggleSideBarHide', true)
+    })
+  },
   mounted() {
+    this.$nextTick(() => {
+      this.$store.dispatch('app/toggleSideBarHide', true)
+    })
     this.getTree()
     const _this = this
     const erd = elementResizeDetectorMaker()

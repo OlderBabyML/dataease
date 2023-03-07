@@ -487,6 +487,12 @@ public class DatasourceService {
         return datasourceMapper.selectByExampleWithBLOBs(datasourceExample);
     }
 
+    public List<Datasource> selectByTypeAndName(String type, String name) {
+        DatasourceExample datasourceExample = new DatasourceExample();
+        datasourceExample.createCriteria().andTypeEqualTo(type).andNameEqualTo(name);
+        return datasourceMapper.selectByExampleWithBLOBs(datasourceExample);
+    }
+
     public void initAllDataSourceConnectionPool() {
         List<Datasource> datasources = datasourceMapper.selectByExampleWithBLOBs(new DatasourceExample());
         datasources.forEach(datasource -> {

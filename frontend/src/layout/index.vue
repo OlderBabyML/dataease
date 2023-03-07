@@ -100,7 +100,11 @@ export default {
       return this.$store.state.settings.showSettings
     },
     fullHeightFlag() {
-      return this.$route.path.indexOf('panel') > -1 && (this.componentName === 'PanelEdit' || this.componentName === 'ChartEdit')
+      let flag = true
+      if (this.$store.state.app.topbar === 'false') {
+        flag = false
+      }
+      return (this.$route.path.indexOf('panel') > -1 && (this.componentName === 'PanelEdit' || this.componentName === 'ChartEdit')) || !flag
     },
     mainStyle() {
       if (this.fullHeightFlag) {

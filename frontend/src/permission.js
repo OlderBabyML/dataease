@@ -4,7 +4,7 @@ import store from './store'
 import NProgress from 'nprogress' // progress bar
 import 'nprogress/nprogress.css' // progress bar style
 import {
-  getToken
+  getToken, setToken, setTopBar
 } from '@/utils/auth' // get token from cookie
 import getPageTitle from '@/utils/get-page-title'
 import {
@@ -79,6 +79,14 @@ router.beforeEach(async (to, from, next) => routeBefore(() => {
   // set page title
   document.title = getPageTitle(to.meta.title)
 
+  if (typeof to.query.Authorization !== 'undefined') {
+    setToken(to.query.Authorization)
+    request.defaults.headers.common['Authorization'] = to.query.Authorization
+  }
+
+  if (typeof to.query.topbar !== 'undefined') {
+    store.dispatch('app/setTopBar', to.query.topbar)
+  }
   // determine whether the user has logged in
 
   if (hasToken) {
@@ -135,7 +143,9 @@ router.beforeEach(async (to, from, next) => routeBefore(() => {
       next()
     } else {
       // other pages that do not have permission to access are redirected to the login page.
-      next(`/login?redirect=${to.fullPath}`)
+      // next(`/login?redirect=${to.path}`)
+      // next('/login')
+      window.location.href = 'https://dataplatform.micoworld.net/#/convenientDashboard'
       NProgress.done()
     }
   }
