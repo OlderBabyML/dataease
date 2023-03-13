@@ -20,6 +20,7 @@ import io.dataease.service.panel.PanelGroupService;
 import io.dataease.service.sys.log.LogService;
 import lombok.SneakyThrows;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.SerializationUtils;
 import org.apache.shiro.util.ThreadContext;
 import org.apache.shiro.web.mgt.DefaultWebSecurityManager;
 import org.quartz.Job;
@@ -29,6 +30,7 @@ import org.quartz.JobExecutionException;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.util.*;
@@ -113,16 +115,34 @@ public class AlarmScheduleJob implements Job {
             List<RuleAndSend> sends = gson.fromJson(schedulerIndexWithBLOBs.getSends(), ruleType);
             ArrayList<String> msg = new ArrayList<>();
             for (RuleAndSend rule : rules) {
+                Type ruleType1 = new TypeToken<RuleAndSend>() {
+                }.getType();
+                RuleAndSend send = gson.fromJson(rule.getSend().toString(), ruleType1);
                 String operate = rule.getOperate();
                 String type = rule.getType();
-                BigDecimal value = BigDecimal.valueOf(Long.valueOf(rule.getValue()));
+                String condition = rule.getCondition();
+                String conditionValue = rule.getConditionValue();
+                if (!StringUtils.isEmpty(condition) && !StringUtils.isEmpty(conditionValue)) {
+                    ArrayList<ChartCustomFilterItemDTO> clone = SerializationUtils.clone(chartCustomFilterItemDTOS);
+                    ChartCustomFilterItemDTO chartCustomFilterItemDTO2 = new ChartCustomFilterItemDTO();
+                    clone.add(chartCustomFilterItemDTO2);
+                    chartCustomFilterItemDTO2.setFieldId(condition);
+                    chartCustomFilterItemDTO2.setTerm("in");
+                    chartCustomFilterItemDTO2.setValue(conditionValue);
+                    chartViewDTO = chartViewService.calcData(view, schedulerIndexWithBLOBs.getTimeField(), false, clone);
+                    tableRow = (ArrayList) chartViewDTO.getData().get("tableRow");
+                }
+                BigDecimal value = new BigDecimal(rule.getValue());
                 switch (operate) {
                     case "高于":
                         if (type.equals("固定值")) {
                             for (HashMap hashMap : tableRow) {
                                 BigDecimal o = (BigDecimal) hashMap.get(index.getDataeaseName());
                                 if (o.compareTo(value) > 0) {
-                                    msg.add(hashMap.get(chartFieldCustomFilterDTO.getDataeaseName()).toString() + ":" + o + "(高于设定的值" + value + ")");
+                                    boolean b = sendAlarm(send, panel, view, hashMap.get(chartFieldCustomFilterDTO.getDataeaseName()).toString() + ":" + o + "(高于设定的值" + value + ")");
+                                    if (!b) {
+                                        msg.add(hashMap.get(chartFieldCustomFilterDTO.getDataeaseName()).toString() + ":" + o + "(高于设定的值" + value + ")");
+                                    }
                                 }
                             }
                         } else if (type.equals("环比过去N天平均值")) {
@@ -132,14 +152,20 @@ public class AlarmScheduleJob implements Job {
                             BigDecimal avg = avgData.divide(new BigDecimal(numDay));
                             BigDecimal decimal = value.add(avg.multiply(new BigDecimal(-1))).divide(avg).abs();
                             if (decimal.compareTo(value) > 0) {
-                                msg.add(index.getDataeaseName() + "指标环比" + numDay + "日均值为:" + decimal + "(高于设定的值" + value + ")");
+                                boolean b = sendAlarm(send, panel, view, index.getDataeaseName() + "指标环比" + numDay + "日均值为:" + decimal + "(高于设定的值" + value + ")");
+                                if (!b) {
+                                    msg.add(index.getDataeaseName() + "指标环比" + numDay + "日均值为:" + decimal + "(高于设定的值" + value + ")");
+                                }
                             }
                         } else if (type.equals("同比上月同期")) {
                             BigDecimal avgData = getMonthData(index.getDataeaseName(), schedulerIndexWithBLOBs.getTimeField(), view,
                                     chartFieldCustomFilterDTO.getId(), startimeMillis, endTimeMillis, schedulerIndexWithBLOBs.getFormat());
                             BigDecimal decimal = value.add(avgData.multiply(new BigDecimal(-1))).divide(avgData).abs();
                             if (decimal.compareTo(value) > 0) {
-                                msg.add(index.getDataeaseName() + "指标上月同比值为:" + decimal + "(高于设定的值" + value + ")");
+                                boolean b = sendAlarm(send, panel, view, index.getDataeaseName() + "指标上月同比值为:" + decimal + "(高于设定的值" + value + ")");
+                                if (!b) {
+                                    msg.add(index.getDataeaseName() + "指标上月同比值为:" + decimal + "(高于设定的值" + value + ")");
+                                }
                             }
                         }
                         break;
@@ -148,7 +174,10 @@ public class AlarmScheduleJob implements Job {
                             for (HashMap hashMap : tableRow) {
                                 BigDecimal o = (BigDecimal) hashMap.get(index.getDataeaseName());
                                 if (o.compareTo(value) < 0) {
-                                    msg.add(hashMap.get(chartFieldCustomFilterDTO.getDataeaseName()).toString() + ":" + o + "(低于设定的值" + value + ")");
+                                    boolean b = sendAlarm(send, panel, view, hashMap.get(chartFieldCustomFilterDTO.getDataeaseName()).toString() + ":" + o + "(低于设定的值" + value + ")");
+                                    if (!b) {
+                                        msg.add(hashMap.get(chartFieldCustomFilterDTO.getDataeaseName()).toString() + ":" + o + "(低于设定的值" + value + ")");
+                                    }
                                 }
                             }
                         } else if (type.equals("环比过去N天平均值")) {
@@ -158,14 +187,20 @@ public class AlarmScheduleJob implements Job {
                             BigDecimal avg = avgData.divide(new BigDecimal(numDay));
                             BigDecimal decimal = value.add(avg.multiply(new BigDecimal(-1))).divide(avg).abs();
                             if (decimal.compareTo(value) < 0) {
-                                msg.add(index.getDataeaseName() + "指标环比" + numDay + "日均值为:" + decimal + "(低于设定的值" + value + ")");
+                                boolean b = sendAlarm(send, panel, view, index.getDataeaseName() + "指标环比" + numDay + "日均值为:" + decimal + "(低于设定的值" + value + ")");
+                                if (!b) {
+                                    msg.add(index.getDataeaseName() + "指标环比" + numDay + "日均值为:" + decimal + "(低于设定的值" + value + ")");
+                                }
                             }
                         } else if (type.equals("同比上月同期")) {
                             BigDecimal avgData = getMonthData(index.getDataeaseName(), schedulerIndexWithBLOBs.getTimeField(), view,
                                     chartFieldCustomFilterDTO.getId(), startimeMillis, endTimeMillis, schedulerIndexWithBLOBs.getFormat());
                             BigDecimal decimal = value.add(avgData.multiply(new BigDecimal(-1))).divide(avgData).abs();
                             if (decimal.compareTo(value) < 0) {
-                                msg.add(index.getDataeaseName() + "指标上月同比值为:" + decimal + "(低于设定的值" + value + ")");
+                                boolean b = sendAlarm(send, panel, view, index.getDataeaseName() + "指标上月同比值为:" + decimal + "(低于设定的值" + value + ")");
+                                if (!b) {
+                                    msg.add(index.getDataeaseName() + "指标上月同比值为:" + decimal + "(低于设定的值" + value + ")");
+                                }
                             }
                         }
                         break;
@@ -228,6 +263,52 @@ public class AlarmScheduleJob implements Job {
         }
     }
 
+    public boolean sendAlarm(RuleAndSend send, PanelGroupWithBLOBs panel, ChartViewDTO view, String msg) throws IOException {
+        String type = send.getType();
+        List<SysUser> users = send.getUsers();
+        String link = send.getLink();
+        if (users == null && (link == null || link.equals(""))) {
+            return false;
+        }
+        if (type == null) {
+            return false;
+        }
+        switch (type) {
+            case "邮箱":
+                for (SysUser user : users) {
+                    Runtime.getRuntime().exec("python " + File.separator + "data" + File.separator + "data-platform" + File.separator + "tools" + File.separator + "index_alarm.py"
+                            + " -t mail -u " + user.getUsername()
+                            + " -s " + panel.getName() + ":" + view.getName() + "指标报警"
+                            + " -m " + msg);
+                }
+                break;
+            case "飞书个人":
+                for (SysUser user : users) {
+                    Runtime.getRuntime().exec("python " + File.separator + "data" + File.separator + "data-platform" + File.separator + "tools" + File.separator + "index_alarm.py"
+                            + " -t person -u " + user.getNickName()
+                            + " -i " + user.getToken()
+                            + " -s " + panel.getName() + ":" + view.getName() + "指标报警"
+                            + " -m " + msg);
+                }
+                break;
+            case "电话":
+                for (SysUser user : users) {
+                    String[] cmd = {"sh", "-c", "sh " + File.separator + "data" + File.separator + "data-platform" + File.separator + "tools" + File.separator + "callPhone.sh"
+                            + " " + user.getPhone().substring(3)
+                            + " '" + panel.getName() + ":" + view.getName() + "指标报警" + msg + "'"};
+                    Runtime.getRuntime().exec(cmd);
+                }
+                break;
+            case "飞书群组":
+                Runtime.getRuntime().exec("python " + File.separator + "data" + File.separator + "data-platform" + File.separator + "tools" + File.separator + "index_alarm.py"
+                        + " -t group -H " + link
+                        + " -s " + panel.getName() + ":" + view.getName() + "指标报警"
+                        + " -m " + msg);
+                break;
+        }
+        return true;
+    }
+
     public BigDecimal getAvgData(String index, String timeField, ChartViewDTO view, Integer numDay, String fieldId, Long startimeMillis, Long endTimeMillis, String format) throws Exception {
         BigDecimal sum = new BigDecimal(0);
         int i = 1;
@@ -286,4 +367,5 @@ public class AlarmScheduleJob implements Job {
         }
         return sum;
     }
+
 }

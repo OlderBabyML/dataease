@@ -10,8 +10,11 @@ public class RuleAndSend implements Serializable {
     private String operate;
     private String value;
     private String color;
+    private Object send;
     private List<SysUser> users;
     private String link;
+    private String condition;
+    private String conditionValue;
 
     private Integer numDay;
 
@@ -72,5 +75,29 @@ public class RuleAndSend implements Serializable {
 
     public void setNumDay(Integer numDay) {
         this.numDay = numDay;
+    }
+
+    public String getCondition() {
+        return condition;
+    }
+
+    public void setCondition(String condition) {
+        this.condition = condition;
+    }
+
+    public String getConditionValue() {
+        return conditionValue;
+    }
+
+    public void setConditionValue(String conditionValue) {
+        this.conditionValue = conditionValue;
+    }
+
+    public Object getSend() {
+        return send;
+    }
+
+    public void setSend(Object send) {
+        this.send = send;
     }
 }

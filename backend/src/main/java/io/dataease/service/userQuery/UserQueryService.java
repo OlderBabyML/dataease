@@ -15,6 +15,7 @@ import io.dataease.provider.datasource.JdbcProvider;
 import io.dataease.provider.query.impala.ImpalaQueryProvider;
 import io.dataease.service.datasource.DatasourceService;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -145,12 +146,15 @@ public class UserQueryService {
                         break;
                     case "client":
                         ArrayList children1 = client.getObject("children", ArrayList.class);
-                        JSONObject o1 = new JSONObject();
-                        o1.put("type", type);
-                        o1.put("id", object.getString("event_name"));
-                        o1.put("label", object.getString("event_name"));
-                        children1.add(o1);
-                        client.put("children", children1);
+                        String eventName = object.getString("event_name");
+                        if (!StringUtils.isEmpty(eventName)) {
+                            JSONObject o1 = new JSONObject();
+                            o1.put("type", type);
+                            o1.put("id", object.getString("event_name"));
+                            o1.put("label", object.getString("event_name"));
+                            children1.add(o1);
+                            client.put("children", children1);
+                        }
                         break;
                     case "h5":
                         ArrayList children2 = h5.getObject("children", ArrayList.class);
@@ -179,8 +183,10 @@ public class UserQueryService {
     public JSONObject getUserEventNum(UserInfoDTO userInfoDTO) throws Exception {
         JSONObject event = new JSONObject();
         String product = micoDw;
+        String columnName = "user_id";
         if (userInfoDTO.getProduct().equals("Yoho")) {
             product = yohoDw;
+            columnName = "uid";
         }
         DatasourceRequest datasourceRequest = new DatasourceRequest();
         JdbcProvider jdbcProvider = (JdbcProvider) ProviderFactory.getProvider(DatasourceTypes.impala.getType());
@@ -203,28 +209,34 @@ public class UserQueryService {
             String key = entry.getKey();
             switch (key) {
                 case "server":
-                    arrayList.add("select dt,event_name,count(*) ct from " + product + ".dwd_server_event_detail where user_id=" + userInfoDTO.getUserId()
+                    arrayList.add("select dt,event_name,count(*) ct from " + product + ".dwd_server_event_detail where " + columnName + "=" + userInfoDTO.getUserId()
                             + " and dt>='" + DateUtils.getDateString(userInfoDTO.getStartTime(), "yyyyMMdd") + "' and dt<='" +
                             DateUtils.getDateString(userInfoDTO.getEndTime(), "yyyyMMdd") + "' and event_name in (" + String.join(",", entry.getValue()) + ") group by dt,event_name");
-                    arrayList.add("select dt,event_name,count(*) ct from " + product + ".tl_server_event_hr where user_id=" + userInfoDTO.getUserId()
-                            + " and dt='" + DateUtils.getDateString(userInfoDTO.getEndTime(), "yyyyMMdd") + "' and event_name in (" + String.join(",", entry.getValue()) + ") group by dt,event_name");
+                    if (DateUtils.getDateString(userInfoDTO.getEndTime(), "yyyyMMdd").equals(DateUtils.getDateString(System.currentTimeMillis(), "yyyyMMdd"))) {
+                        arrayList.add("select dt,event_name,count(*) ct from " + product + ".tl_server_event_hr where " + columnName + "=" + userInfoDTO.getUserId()
+                                + " and dt='" + DateUtils.getDateString(userInfoDTO.getEndTime(), "yyyyMMdd") + "' and event_name in (" + String.join(",", entry.getValue()) + ") group by dt,event_name");
+                    }
                     break;
                 case "client":
-                    arrayList.add("select dt,event_name,count(*) ct from " + product + ".dwd_client_event_detail where user_id=" + userInfoDTO.getUserId()
+                    arrayList.add("select dt,event_name,count(*) ct from " + product + ".dwd_client_event_detail where " + columnName + "=" + userInfoDTO.getUserId()
                             + " and dt>='" + DateUtils.getDateString(userInfoDTO.getStartTime(), "yyyyMMdd") + "' and dt<='" +
                             DateUtils.getDateString(userInfoDTO.getEndTime(), "yyyyMMdd") + "' and event_name in (" + String.join(",", entry.getValue()) + ") group by dt,event_name");
-                    arrayList.add("select dt,event_name,count(*) ct from " + product + ".tl_client_event_hr where user_id=" + userInfoDTO.getUserId()
-                            + " and dt='" + DateUtils.getDateString(userInfoDTO.getEndTime(), "yyyyMMdd") + "' and event_name in (" + String.join(",", entry.getValue()) + ") group by dt,event_name");
+                    if (DateUtils.getDateString(userInfoDTO.getEndTime(), "yyyyMMdd").equals(DateUtils.getDateString(System.currentTimeMillis(), "yyyyMMdd"))) {
+                        arrayList.add("select dt,event_name,count(*) ct from " + product + ".tl_client_event_hr where " + columnName + "=" + userInfoDTO.getUserId()
+                                + " and dt='" + DateUtils.getDateString(userInfoDTO.getEndTime(), "yyyyMMdd") + "' and event_name in (" + String.join(",", entry.getValue()) + ") group by dt,event_name");
+                    }
                     break;
                 case "h5":
                     arrayList.add("select dt,event_name,count(*) ct from " + product + ".dwd_h5_event_detail where user_id=" + userInfoDTO.getUserId()
                             + " and dt>='" + DateUtils.getDateString(userInfoDTO.getStartTime(), "yyyyMMdd") + "' and dt<='" +
                             DateUtils.getDateString(userInfoDTO.getEndTime(), "yyyyMMdd") + "' and event_name in (" + String.join(",", entry.getValue()) + ") group by dt,event_name");
-                    arrayList.add("select dt,event_name,count(*) ct from " + product + ".tl_h5_event_hr where user_id=" + userInfoDTO.getUserId()
-                            + " and dt='" + DateUtils.getDateString(userInfoDTO.getEndTime(), "yyyyMMdd") + "' and event_name in (" + String.join(",", entry.getValue()) + ") group by dt,event_name");
+                    if (DateUtils.getDateString(userInfoDTO.getEndTime(), "yyyyMMdd").equals(DateUtils.getDateString(System.currentTimeMillis(), "yyyyMMdd"))) {
+                        arrayList.add("select dt,event_name,count(*) ct from " + product + ".tl_h5_event_hr where " + columnName + "=" + userInfoDTO.getUserId()
+                                + " and dt='" + DateUtils.getDateString(userInfoDTO.getEndTime(), "yyyyMMdd") + "' and event_name in (" + String.join(",", entry.getValue()) + ") group by dt,event_name");
+                    }
                     break;
                 case "technology":
-                    arrayList.add("select dt,event_name,count(*) ct from " + product + ".dwd_apm_client_event_detail where user_id=" + userInfoDTO.getUserId()
+                    arrayList.add("select dt,event_name,count(*) ct from " + product + ".dwd_apm_client_event_detail where " + columnName + "=" + userInfoDTO.getUserId()
                             + " and dt>='" + DateUtils.getDateString(userInfoDTO.getStartTime(), "yyyyMMdd") + "' and dt<='" +
                             DateUtils.getDateString(userInfoDTO.getEndTime(), "yyyyMMdd") + "' and event_name in (" + String.join(",", entry.getValue()) + ") group by dt,event_name");
                     break;
@@ -283,7 +295,9 @@ public class UserQueryService {
     public ArrayList<JSONObject> getUserEventDetail(UserInfoDTO userInfoDTO) throws Exception {
         ArrayList<JSONObject> eventDetailList = new ArrayList<>();
         String product = micoDw;
+        String columnName = "user_id";
         if (userInfoDTO.getProduct().equals("Yoho")) {
+            columnName = "uid";
             product = yohoDw;
         }
         DatasourceRequest datasourceRequest = new DatasourceRequest();
@@ -307,81 +321,117 @@ public class UserQueryService {
             String key = entry.getKey();
             switch (key) {
                 case "server":
-                    arrayList.add("select * from " + product + ".dwd_server_event_detail where user_id=" + userInfoDTO.getUserId()
+                    arrayList.add("select * from " + product + ".dwd_server_event_detail where " + columnName + "=" + userInfoDTO.getUserId()
                             + " and dt>='" + DateUtils.getDateString(userInfoDTO.getStartTime(), "yyyyMMdd") + "' and dt<='" +
-                            DateUtils.getDateString(userInfoDTO.getEndTime(), "yyyyMMdd") + "' and event_name in (" + String.join(",", entry.getValue()) + ") order by `timestamp`" + userInfoDTO.getSort()
-                            + " limit 20 offset " + (userInfoDTO.getPageNo() - 1) * 20);
-                    arrayList.add("select * from " + product + ".tl_server_event_hr where user_id=" + userInfoDTO.getUserId()
-                            + " and dt='" + DateUtils.getDateString(userInfoDTO.getEndTime(), "yyyyMMdd") + "' and event_name in (" + String.join(",", entry.getValue()) + ") order by `timestamp`" + userInfoDTO.getSort()
-                            + " limit 20 offset " + (userInfoDTO.getPageNo() - 1) * 20);
+                            DateUtils.getDateString(userInfoDTO.getEndTime(), "yyyyMMdd") + "' and event_name in (" + String.join(",", entry.getValue()) + ") order by `timestamp`" + userInfoDTO.getSort());
+                    if (DateUtils.getDateString(userInfoDTO.getEndTime(), "yyyyMMdd").equals(DateUtils.getDateString(System.currentTimeMillis(), "yyyyMMdd"))) {
+                        arrayList.add("select * from " + product + ".tl_server_event_hr where " + columnName + "=" + userInfoDTO.getUserId()
+                                + " and dt='" + DateUtils.getDateString(userInfoDTO.getEndTime(), "yyyyMMdd") + "' and event_name in (" + String.join(",", entry.getValue()) + ") order by `timestamp`" + userInfoDTO.getSort());
+                    }
                     break;
                 case "client":
-                    arrayList.add("select * from " + product + ".dwd_client_event_detail where user_id=" + userInfoDTO.getUserId()
+                    arrayList.add("select * from " + product + ".dwd_client_event_detail where " + columnName + "=" + userInfoDTO.getUserId()
                             + " and dt>='" + DateUtils.getDateString(userInfoDTO.getStartTime(), "yyyyMMdd") + "' and dt<='" +
-                            DateUtils.getDateString(userInfoDTO.getEndTime(), "yyyyMMdd") + "' and event_name in (" + String.join(",", entry.getValue()) + ") order by `timestamp`" + userInfoDTO.getSort()
-                            + " limit 20 offset " + (userInfoDTO.getPageNo() - 1) * 20);
-                    arrayList.add("select * from " + product + ".tl_client_event_hr where user_id=" + userInfoDTO.getUserId()
-                            + " and dt='" + DateUtils.getDateString(userInfoDTO.getEndTime(), "yyyyMMdd") + "' and event_name in (" + String.join(",", entry.getValue()) + ") order by `timestamp`" + userInfoDTO.getSort()
-                            + " limit 20 offset " + (userInfoDTO.getPageNo() - 1) * 20);
+                            DateUtils.getDateString(userInfoDTO.getEndTime(), "yyyyMMdd") + "' and event_name in (" + String.join(",", entry.getValue()) + ") order by `timestamp`" + userInfoDTO.getSort());
+                    if (DateUtils.getDateString(userInfoDTO.getEndTime(), "yyyyMMdd").equals(DateUtils.getDateString(System.currentTimeMillis(), "yyyyMMdd"))) {
+                        arrayList.add("select * from " + product + ".tl_client_event_hr where " + columnName + "=" + userInfoDTO.getUserId()
+                                + " and dt='" + DateUtils.getDateString(userInfoDTO.getEndTime(), "yyyyMMdd") + "' and event_name in (" + String.join(",", entry.getValue()) + ") order by `timestamp`" + userInfoDTO.getSort());
+                    }
                     break;
                 case "h5":
-                    arrayList.add("select * ct from " + product + ".dwd_h5_event_detail where user_id=" + userInfoDTO.getUserId()
+                    arrayList.add("select * from " + product + ".dwd_h5_event_detail where " + columnName + "=" + userInfoDTO.getUserId()
                             + " and dt>='" + DateUtils.getDateString(userInfoDTO.getStartTime(), "yyyyMMdd") + "' and dt<='" +
-                            DateUtils.getDateString(userInfoDTO.getEndTime(), "yyyyMMdd") + "' and event_name in (" + String.join(",", entry.getValue()) + ") order by `timestamp`" + userInfoDTO.getSort()
-                            + " limit 20 offset " + (userInfoDTO.getPageNo() - 1) * 20);
-                    arrayList.add("select * from " + product + ".tl_h5_event_hr where user_id=" + userInfoDTO.getUserId()
-                            + " and dt='" + DateUtils.getDateString(userInfoDTO.getEndTime(), "yyyyMMdd") + "' and event_name in (" + String.join(",", entry.getValue()) + ") order by `timestamp`" + userInfoDTO.getSort()
-                            + " limit 20 offset " + (userInfoDTO.getPageNo() - 1) * 20);
-                    ;
+                            DateUtils.getDateString(userInfoDTO.getEndTime(), "yyyyMMdd") + "' and event_name in (" + String.join(",", entry.getValue()) + ") order by `timestamp`" + userInfoDTO.getSort());
+                    if (DateUtils.getDateString(userInfoDTO.getEndTime(), "yyyyMMdd").equals(DateUtils.getDateString(System.currentTimeMillis(), "yyyyMMdd"))) {
+                        arrayList.add("select * from " + product + ".tl_h5_event_hr where " + columnName + "=" + userInfoDTO.getUserId()
+                                + " and dt='" + DateUtils.getDateString(userInfoDTO.getEndTime(), "yyyyMMdd") + "' and event_name in (" + String.join(",", entry.getValue()) + ") order by `timestamp`" + userInfoDTO.getSort());
+                    }
                     break;
                 case "technology":
-                    arrayList.add("select * from " + product + ".dwd_apm_client_event_detail where user_id=" + userInfoDTO.getUserId()
+                    arrayList.add("select * from " + product + ".dwd_apm_client_event_detail where " + columnName + "=" + userInfoDTO.getUserId()
                             + " and dt>='" + DateUtils.getDateString(userInfoDTO.getStartTime(), "yyyyMMdd") + "' and dt<='" +
-                            DateUtils.getDateString(userInfoDTO.getEndTime(), "yyyyMMdd") + "' and event_name in (" + String.join(",", entry.getValue()) + ") order by `timestamp`" + userInfoDTO.getSort()
-                            + " limit 20 offset " + (userInfoDTO.getPageNo() - 1) * 20);
+                            DateUtils.getDateString(userInfoDTO.getEndTime(), "yyyyMMdd") + "' and event_name in (" + String.join(",", entry.getValue()) + ") order by `timestamp`" + userInfoDTO.getSort());
                     break;
             }
         }
-        String sql = String.join(" union all ", arrayList);
-        sql = "select * from (" + sql + ") t order by `timestamp` " + userInfoDTO.getSort();
-        datasourceRequest.setDatasource(dw.get(0));
-        datasourceRequest.setQuery(sql);
-        List<JSONObject> jsonData = jdbcProvider.getJsonRowData(datasourceRequest);
-        for (JSONObject object : jsonData) {
-            String dt = DateUtils.getDateString(DateUtils.getDate(object.getString("dt"), "yyyyMMdd"));
-            Long timestamp = object.getLong("timestamp");
-            JSONObject jsonObject = new JSONObject();
-            jsonObject.put("isShow", false);
-            jsonObject.put("name", object.getString("event_name"));
-            jsonObject.put("timestamp", DateUtils.getDateString(timestamp, "HH:mm:ss:SSS"));
-            ArrayList<JSONObject> dataList = new ArrayList<>();
-            Set<Map.Entry<String, Object>> set = object.entrySet();
-            for (Map.Entry<String, Object> objectEntry : set) {
-                JSONObject event = new JSONObject();
-                event.put("name", objectEntry.getKey());
-                event.put("value", objectEntry.getValue());
-                dataList.add(event);
-            }
-            jsonObject.put("dataList", dataList);
+        //String sql = String.join(" union all ", arrayList);
+        //sql = "select * from (" + sql + ") t order by `timestamp` " + userInfoDTO.getSort();
+        if (arrayList.size() > 0) {
+            for (String s : arrayList) {
+                String sql = "select * from (" + s + ") t order by `timestamp` " + userInfoDTO.getSort();
+                datasourceRequest.setDatasource(dw.get(0));
+                datasourceRequest.setQuery(sql);
+                List<JSONObject> jsonData = jdbcProvider.getJsonRowData(datasourceRequest);
+                for (JSONObject object : jsonData) {
+                    String dt = DateUtils.getDateString(DateUtils.getDate(object.getString("dt"), "yyyyMMdd"));
+                    Long timestamp = object.getLong("timestamp");
+                    JSONObject jsonObject = new JSONObject();
+                    jsonObject.put("isShow", false);
+                    jsonObject.put("name", object.getString("event_name"));
+                    jsonObject.put("timestamp", DateUtils.getDateString(timestamp, "HH:mm:ss:SSS"));
+                    jsonObject.put("timestamps", timestamp);
+                    ArrayList<JSONObject> dataList = new ArrayList<>();
+                    Set<Map.Entry<String, Object>> set = object.entrySet();
+                    for (Map.Entry<String, Object> objectEntry : set) {
+                        JSONObject event = new JSONObject();
+                        event.put("name", objectEntry.getKey());
+                        event.put("value", objectEntry.getValue());
+                        dataList.add(event);
+                    }
+                    jsonObject.put("dataList", dataList);
 
-            List jsonObjects = null;
-            if (eventDetailList.size() > 0) {
-                for (JSONObject o : eventDetailList) {
-                    if (o.getString("date").equals(dt)) {
-                        jsonObjects = o.getObject("eventList", List.class);
+                    List jsonObjects = null;
+                    if (eventDetailList.size() > 0) {
+                        for (JSONObject o : eventDetailList) {
+                            if (o.getString("date").equals(dt)) {
+                                jsonObjects = o.getObject("eventList", List.class);
+                            }
+                        }
+                    }
+                    if (jsonObjects != null) {
+                        jsonObjects.add(jsonObject);
+                    } else {
+                        jsonObjects = new ArrayList<>();
+                        jsonObjects.add(jsonObject);
+                        JSONObject jsonObject1 = new JSONObject();
+                        jsonObject1.put("date", dt);
+                        jsonObject1.put("date1", object.getString("dt"));
+                        jsonObject1.put("eventList", jsonObjects);
+                        eventDetailList.add(jsonObject1);
                     }
                 }
             }
-            if (jsonObjects != null) {
-                jsonObjects.add(jsonObject);
-            } else {
-                jsonObjects = new ArrayList<>();
-                jsonObjects.add(jsonObject);
-                JSONObject jsonObject1 = new JSONObject();
-                jsonObject1.put("date", dt);
-                jsonObject1.put("eventList", jsonObjects);
-                eventDetailList.add(jsonObject1);
+            for (JSONObject jsonObject : eventDetailList) {
+                List events = jsonObject.getObject("eventList", List.class);
+                Collections.sort(events, new Comparator<Object>() {
+                    @Override
+                    public int compare(Object o1, Object o2) {
+                        JSONObject jsonObject1 = JSONObject.parseObject(o1.toString());
+                        JSONObject jsonObject2 = JSONObject.parseObject(o2.toString());
+                        Long timestamp1 = jsonObject1.getLong("timestamps");
+                        Long timestamp2 = jsonObject2.getLong("timestamps");
+                        if (userInfoDTO.getSort().equals("desc")) {
+                            Long cha = timestamp2 - timestamp1;
+                            return cha.intValue();
+                        } else {
+                            Long cha = timestamp1 - timestamp2;
+                            return cha.intValue();
+                        }
+                    }
+                });
             }
+            Collections.sort(eventDetailList, new Comparator<JSONObject>() {
+                @Override
+                public int compare(JSONObject o1, JSONObject o2) {
+                    Integer date = o1.getInteger("date1");
+                    Integer date1 = o2.getInteger("date1");
+                    if (userInfoDTO.getSort().equals("desc")) {
+                        return date1 - date;
+                    } else {
+                        return date - date1;
+                    }
+                }
+            });
         }
         return eventDetailList;
     }
@@ -389,7 +439,9 @@ public class UserQueryService {
     public ArrayList<JSONObject> getUserEventDetailForDate(UserInfoDTO userInfoDTO) throws Exception {
         ArrayList<JSONObject> eventDetailList = new ArrayList<>();
         String product = micoDw;
+        String columnName = "user_id";
         if (userInfoDTO.getProduct().equals("Yoho")) {
+            columnName = "uid";
             product = yohoDw;
         }
         DatasourceRequest datasourceRequest = new DatasourceRequest();
@@ -413,80 +465,120 @@ public class UserQueryService {
             String key = entry.getKey();
             switch (key) {
                 case "server":
-                    arrayList.add("select * from " + product + ".dwd_server_event_detail where user_id=" + userInfoDTO.getUserId()
-                            + " and dt>='" + userInfoDTO.getDate() + "' and dt<='" +
-                            userInfoDTO.getDate() + "' and event_name in (" + String.join(",", entry.getValue()) + ") order by `timestamp`" + userInfoDTO.getSort()
-                            + " limit 20 offset " + (userInfoDTO.getPageNo() - 1) * 20);
-                    arrayList.add("select * from " + product + ".tl_server_event_hr where user_id=" + userInfoDTO.getUserId()
-                            + " and dt='" + userInfoDTO.getDate() + "' and event_name in (" + String.join(",", entry.getValue()) + ") order by `timestamp`" + userInfoDTO.getSort()
-                            + " limit 20 offset " + (userInfoDTO.getPageNo() - 1) * 20);
+                    if (!userInfoDTO.getDate().equals(DateUtils.getDateString(System.currentTimeMillis(), "yyyyMMdd"))) {
+                        arrayList.add("select * from " + product + ".dwd_server_event_detail where " + columnName + "=" + userInfoDTO.getUserId()
+                                + " and dt>='" + userInfoDTO.getDate() + "' and dt<='" +
+                                userInfoDTO.getDate() + "' and event_name in (" + String.join(",", entry.getValue()) + ") order by `timestamp`" + userInfoDTO.getSort());
+                    } else {
+                        arrayList.add("select * from " + product + ".tl_server_event_hr where " + columnName + "=" + userInfoDTO.getUserId()
+                                + " and dt='" + userInfoDTO.getDate() + "' and event_name in (" + String.join(",", entry.getValue()) + ") order by `timestamp`" + userInfoDTO.getSort());
+                    }
                     break;
                 case "client":
-                    arrayList.add("select * from " + product + ".dwd_client_event_detail where user_id=" + userInfoDTO.getUserId()
-                            + " and dt>='" + userInfoDTO.getDate() + "' and dt<='" +
-                            userInfoDTO.getDate() + "' and event_name in (" + String.join(",", entry.getValue()) + ") order by `timestamp`" + userInfoDTO.getSort()
-                            + " limit 20 offset " + (userInfoDTO.getPageNo() - 1) * 20);
-                    arrayList.add("select * from " + product + ".tl_client_event_hr where user_id=" + userInfoDTO.getUserId()
-                            + " and dt='" + userInfoDTO.getDate() + "' and event_name in (" + String.join(",", entry.getValue()) + ") order by `timestamp`" + userInfoDTO.getSort()
-                            + " limit 20 offset " + (userInfoDTO.getPageNo() - 1) * 20);
+                    if (!userInfoDTO.getDate().equals(DateUtils.getDateString(System.currentTimeMillis(), "yyyyMMdd"))) {
+                        arrayList.add("select * from " + product + ".dwd_client_event_detail where " + columnName + "=" + userInfoDTO.getUserId()
+                                + " and dt>='" + userInfoDTO.getDate() + "' and dt<='" +
+                                userInfoDTO.getDate() + "' and event_name in (" + String.join(",", entry.getValue()) + ") order by `timestamp`" + userInfoDTO.getSort());
+                    } else {
+                        arrayList.add("select * from " + product + ".tl_client_event_hr where " + columnName + "=" + userInfoDTO.getUserId()
+                                + " and dt='" + userInfoDTO.getDate() + "' and event_name in (" + String.join(",", entry.getValue()) + ") order by `timestamp`" + userInfoDTO.getSort());
+                    }
                     break;
                 case "h5":
-                    arrayList.add("select * ct from " + product + ".dwd_h5_event_detail where user_id=" + userInfoDTO.getUserId()
-                            + " and dt>='" + userInfoDTO.getDate() + "' and dt<='" +
-                            userInfoDTO.getDate() + "' and event_name in (" + String.join(",", entry.getValue()) + ") order by `timestamp`" + userInfoDTO.getSort()
-                            + " limit 20 offset " + (userInfoDTO.getPageNo() - 1) * 20);
-                    arrayList.add("select * from " + product + ".tl_h5_event_hr where user_id=" + userInfoDTO.getUserId()
-                            + " and dt='" + userInfoDTO.getDate() + "' and event_name in (" + String.join(",", entry.getValue()) + ") order by `timestamp`" + userInfoDTO.getSort()
-                            + " limit 20 offset " + (userInfoDTO.getPageNo() - 1) * 20);
+                    if (!userInfoDTO.getDate().equals(DateUtils.getDateString(System.currentTimeMillis(), "yyyyMMdd"))) {
+                        arrayList.add("select * ct from " + product + ".dwd_h5_event_detail where " + columnName + "=" + userInfoDTO.getUserId()
+                                + " and dt>='" + userInfoDTO.getDate() + "' and dt<='" +
+                                userInfoDTO.getDate() + "' and event_name in (" + String.join(",", entry.getValue()) + ") order by `timestamp`" + userInfoDTO.getSort());
+                    } else {
+                        arrayList.add("select * from " + product + ".tl_h5_event_hr where " + columnName + "=" + userInfoDTO.getUserId()
+                                + " and dt='" + userInfoDTO.getDate() + "' and event_name in (" + String.join(",", entry.getValue()) + ") order by `timestamp`" + userInfoDTO.getSort());
+                    }
                     break;
                 case "technology":
-                    arrayList.add("select * from " + product + ".dwd_apm_client_event_detail where user_id=" + userInfoDTO.getUserId()
+                    arrayList.add("select * from " + product + ".dwd_apm_client_event_detail where " + columnName + "=" + userInfoDTO.getUserId()
                             + " and dt>='" + userInfoDTO.getDate() + "' and dt<='" +
-                            userInfoDTO.getDate() + "' and event_name in (" + String.join(",", entry.getValue()) + ") order by `timestamp`" + userInfoDTO.getSort()
-                            + " limit 20 offset " + (userInfoDTO.getPageNo() - 1) * 20);
+                            userInfoDTO.getDate() + "' and event_name in (" + String.join(",", entry.getValue()) + ") order by `timestamp`" + userInfoDTO.getSort());
                     break;
             }
         }
-        String sql = String.join(" union all ", arrayList);
-        sql = "select * from (" + sql + ") t order by `timestamp` " + userInfoDTO.getSort();
-        datasourceRequest.setDatasource(dw.get(0));
-        datasourceRequest.setQuery(sql);
-        List<JSONObject> jsonData = jdbcProvider.getJsonRowData(datasourceRequest);
-        for (JSONObject object : jsonData) {
-            String dt = DateUtils.getDateString(DateUtils.getDate(object.getString("dt"), "yyyyMMdd"));
-            Long timestamp = object.getLong("timestamp");
-            JSONObject jsonObject = new JSONObject();
-            jsonObject.put("isShow", false);
-            jsonObject.put("name", object.getString("event_name"));
-            jsonObject.put("timestamp", DateUtils.getDateString(timestamp, "HH:mm:ss:SSS"));
-            ArrayList<JSONObject> dataList = new ArrayList<>();
-            Set<Map.Entry<String, Object>> set = object.entrySet();
-            for (Map.Entry<String, Object> objectEntry : set) {
-                JSONObject event = new JSONObject();
-                event.put("name", objectEntry.getKey());
-                event.put("value", objectEntry.getValue());
-                dataList.add(event);
-            }
-            jsonObject.put("dataList", dataList);
+//        String sql = String.join(" union all ", arrayList);
+//        sql = "select * from (" + sql + ") t order by `timestamp` " + userInfoDTO.getSort();
+        if (arrayList.size() > 0) {
+            for (String s : arrayList) {
+                String sql = "select * from (" + s + ") t order by `timestamp` " + userInfoDTO.getSort();
+                datasourceRequest.setDatasource(dw.get(0));
+                datasourceRequest.setQuery(sql);
+                List<JSONObject> jsonData = jdbcProvider.getJsonRowData(datasourceRequest);
+                for (JSONObject object : jsonData) {
+                    String dt = DateUtils.getDateString(DateUtils.getDate(object.getString("dt"), "yyyyMMdd"));
+                    Long timestamp = object.getLong("timestamp");
+                    JSONObject jsonObject = new JSONObject();
+                    jsonObject.put("isShow", false);
+                    jsonObject.put("name", object.getString("event_name"));
+                    jsonObject.put("timestamp", DateUtils.getDateString(timestamp, "HH:mm:ss:SSS"));
+                    jsonObject.put("timestamps", timestamp);
+                    ArrayList<JSONObject> dataList = new ArrayList<>();
+                    Set<Map.Entry<String, Object>> set = object.entrySet();
+                    for (Map.Entry<String, Object> objectEntry : set) {
+                        JSONObject event = new JSONObject();
+                        event.put("name", objectEntry.getKey());
+                        event.put("value", objectEntry.getValue());
+                        dataList.add(event);
+                    }
+                    jsonObject.put("dataList", dataList);
 
-            List jsonObjects = null;
-            if (eventDetailList.size() > 0) {
-                for (JSONObject o : eventDetailList) {
-                    if (o.getString("date").equals(dt)) {
-                        jsonObjects = o.getObject("eventList", List.class);
+                    List jsonObjects = null;
+                    if (eventDetailList.size() > 0) {
+                        for (JSONObject o : eventDetailList) {
+                            if (o.getString("date").equals(dt)) {
+                                jsonObjects = o.getObject("eventList", List.class);
+                            }
+                        }
+                    }
+                    if (jsonObjects != null) {
+                        jsonObjects.add(jsonObject);
+                    } else {
+                        jsonObjects = new ArrayList<>();
+                        jsonObjects.add(jsonObject);
+                        JSONObject jsonObject1 = new JSONObject();
+                        jsonObject1.put("date", dt);
+                        jsonObject1.put("date1", object.getString("dt"));
+                        jsonObject1.put("eventList", jsonObjects);
+                        eventDetailList.add(jsonObject1);
                     }
                 }
             }
-            if (jsonObjects != null) {
-                jsonObjects.add(jsonObject);
-            } else {
-                jsonObjects = new ArrayList<>();
-                jsonObjects.add(jsonObject);
-                JSONObject jsonObject1 = new JSONObject();
-                jsonObject1.put("date", dt);
-                jsonObject1.put("eventList", jsonObjects);
-                eventDetailList.add(jsonObject1);
+            for (JSONObject jsonObject : eventDetailList) {
+                List events = jsonObject.getObject("eventList", List.class);
+                Collections.sort(events, new Comparator<Object>() {
+                    @Override
+                    public int compare(Object o1, Object o2) {
+                        JSONObject jsonObject1 = JSONObject.parseObject(o1.toString());
+                        JSONObject jsonObject2 = JSONObject.parseObject(o2.toString());
+                        Long timestamp1 = jsonObject1.getLong("timestamps");
+                        Long timestamp2 = jsonObject2.getLong("timestamps");
+                        if (userInfoDTO.getSort().equals("desc")) {
+                            Long cha = timestamp2 - timestamp1;
+                            return cha.intValue();
+                        } else {
+                            Long cha = timestamp1 - timestamp2;
+                            return cha.intValue();
+                        }
+                    }
+                });
             }
+            Collections.sort(eventDetailList, new Comparator<JSONObject>() {
+                @Override
+                public int compare(JSONObject o1, JSONObject o2) {
+                    Integer date = o1.getInteger("date1");
+                    Integer date1 = o2.getInteger("date1");
+                    if (userInfoDTO.getSort().equals("desc")) {
+                        return date1 - date;
+                    } else {
+                        return date - date1;
+                    }
+                }
+            });
         }
         return eventDetailList;
     }
@@ -522,7 +614,8 @@ public class UserQueryService {
             ChartFieldCustomFilterDTO chartFieldCustomFilterDTO = getChartFieldCustomFilterDTO("eq", "logic", userInfoDTO.getUid().toString());
             chartFieldCustomFilterDTO.setField(DatasetTableField.builder().originName("uid").deType(DeTypeConstants.DE_INT).deExtractType(DeTypeConstants.DE_INT).build());
             requestList.add(chartFieldCustomFilterDTO);
-            List<JSONObject> userList = getUserList(product, productHr, startTime, qp, "uid", datasourceRequest, requestList, userInfoDTO.getUid(), jdbcProvider);
+            List<JSONObject> userList = null;
+            userList = getUserList(product, productHr, startTime, qp, "uid", datasourceRequest, requestList, userInfoDTO.getUid(), jdbcProvider);
             JSONObject jsonObject = new JSONObject();
             jsonObject.put("id", userInfoDTO.getUid());
             jsonObject.put("userId", userInfoDTO.getUid());
@@ -537,9 +630,9 @@ public class UserQueryService {
             requestList.add(chartFieldCustomFilterDTO);
             if (CollectionUtils.isNotEmpty(dw)) {
                 startTime.getFilter().get(0).setValue(DateUtils.getDateString(System.currentTimeMillis(), "yyyyMMdd"));
-                String querySql = qp.getSQLSummaryNoView(product + ".ads_new_user_attr_hr", requestList, null, "dt", "desc");
+                String querySql = qp.getSQLSummaryNoView(productHr + ".ads_new_user_attr_hr", requestList, null, "dt", "desc");
                 datasourceRequest.setDatasource(dw.get(0));
-                datasourceRequest.setTable(product + ".ads_new_user_attr_hr");
+                datasourceRequest.setTable(productHr + ".ads_new_user_attr_hr");
                 datasourceRequest.setQuery(querySql + " limit 100");
                 List<JSONObject> jsonData = jdbcProvider.getJsonRowData(datasourceRequest);
                 if (CollectionUtils.isNotEmpty(jsonData)) {
@@ -573,7 +666,7 @@ public class UserQueryService {
         List<Datasource> dw = datasourceService.selectByTypeAndName(DatasourceTypes.impala.getType(), product);
         if (CollectionUtils.isNotEmpty(dw)) {
             String querySql = "select " +
-                    "uid,user_id,platform,avatar,photowall,status,gender,user_level,nike_name,birthday,regist_time,country,region,agent_type,gifter_type,gifter_level,gifter_signed_time,vj_type,vj_signed_time,vj_grade,is_new,union_id,union_name,joined_union_time,is_union_head,union_head_uid,family_id,family_name,is_family_head,family_head_uid,broker_id,locale,first_login_device_os,timezone,first_login_account_type,email,phone_number,gold_balance,diamond_balance,silver_balance,wallet_balance,last_login_date,login_days,30_login_days,first_recharge_time,first_recharge_amount,last_recharge_time,last_recharge_amount,recharge_times,recharge_amount,last_media_source,last_media_type,last_install_campaign,last_live_date,is_robot" +
+                    "*" +
                     " from " + product + ".al_north_star_user_attr where dt='" + DateUtils.getDateString(System.currentTimeMillis() - 1000 * 60 * 60 * 24, "yyyyMMdd") + "' and " + columnName + "=" + userId + " limit 1";
             datasourceRequest.setDatasource(dw.get(0));
             datasourceRequest.setTable(product + ".al_north_star_user_attr");
@@ -594,7 +687,7 @@ public class UserQueryService {
                 } else {
                     dw = datasourceService.selectByTypeAndName(DatasourceTypes.impala.getType(), product);
                     querySql = "select " +
-                            "uid,user_id,platform,avatar,photowall,status,gender,user_level,nike_name,birthday,regist_time,country,region,agent_type,gifter_type,gifter_level,gifter_signed_time,vj_type,vj_signed_time,vj_grade,is_new,union_id,union_name,joined_union_time,is_union_head,union_head_uid,family_id,family_name,is_family_head,family_head_uid,broker_id,locale,first_login_device_os,timezone,first_login_account_type,email,phone_number,gold_balance,diamond_balance,silver_balance,wallet_balance,last_login_date,login_days,30_login_days,first_recharge_time,first_recharge_amount,last_recharge_time,last_recharge_amount,recharge_times,recharge_amount,last_media_source,last_media_type,last_install_campaign,last_live_date,is_robot" +
+                            "*" +
                             " from " + product + ".al_north_star_user_attr where dt='" + DateUtils.getDateString(System.currentTimeMillis() - 1000 * 60 * 60 * 24, "yyyyMMdd") + "' and " + columnName + "=" + userId + " limit 1";
                     datasourceRequest.setDatasource(dw.get(0));
                     datasourceRequest.setTable(product + ".al_north_star_user_attr");

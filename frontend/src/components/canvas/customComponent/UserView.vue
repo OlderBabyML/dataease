@@ -435,6 +435,64 @@
                   />
                 </div>
                 <div style="display: flex;justify-content: left">
+                  报警条件：
+                  <el-select
+                    v-model="item.condition"
+                    style="width: 140px"
+                    value-key="id"
+                    filterable
+                    clearable
+                    placeholder="请选择"
+                  >
+                    <el-option
+                      v-for="(item1,index1) in chart.data.sourceFields"
+                      :key="index1"
+                      :label="item1.name"
+                      :value="item1.id"
+                    />
+                  </el-select>
+                  =
+                  <el-input
+                    v-model="item.conditionValue"
+                    style="width: 160px"
+                  />
+                </div>
+                <div style="display: flex;justify-content: left">
+                  发送设置:
+                  <el-select
+                    v-model="item.send.type"
+                    style="width: 140px"
+                    placeholder="请选择"
+                  >
+                    <el-option
+                      v-for="(type,i) in options.sendType"
+                      :key="i"
+                      :label="type"
+                      :value="type"
+                    />
+                  </el-select>
+                  <el-select
+                    v-if="item.send.type === '飞书个人' || item.send.type === '邮箱' || item.send.type === '电话'"
+                    v-model="item.send.users"
+                    value-key="userId"
+                    multiple
+                    filterable
+                    placeholder="请选择"
+                  >
+                    <el-option
+                      v-for="item3 in options.userList"
+                      :key="item3.userId"
+                      :label="item3.nickName"
+                      :value="item3"
+                    />
+                  </el-select>
+                  <el-input
+                    v-else
+                    v-model="item.send.link"
+                    style="width: 400px"
+                  />
+                </div>
+                <div style="display: flex;justify-content: left;align-items: center">
                   报警时图表背景颜色：
                   <el-color-picker
                     v-model="item.color"
@@ -1488,15 +1546,20 @@ export default {
               }
               if (typeof x.rules === 'undefined') {
                 this.$set(x, 'rules', [])
-                x.rules.push({ type: '固定值', operate: '高于', color: '#FF4500' })
+                x.rules.push({ type: '固定值', operate: '高于', color: '#FF4500', send: { type: '飞书群组' }})
               } else {
                 x.rules = JSON.parse(x.rules)
+                x.rules.forEach(a => {
+                  if (typeof a.send === 'undefined') {
+                    this.$set(a, 'send', { type: '飞书群组' })
+                  }
+                })
               }
               arr.push(x)
             }
           })
           if (flag) {
-            const temp = { name: y.name, indexField: JSON.stringify(y) }
+            const temp = { name: y.name, indexField: JSON.stringify(y), rules: [{ type: '固定值', operate: '高于', color: '#FF4500', send: { type: '飞书群组' }}] }
             arr.push(temp)
           }
         })
