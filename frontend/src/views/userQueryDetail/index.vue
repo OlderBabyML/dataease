@@ -3,7 +3,6 @@
     style="position: relative;width: 100%;height: 100%;overflow: hidden;"
   >
     <div
-      v-if="userDialogVisible"
       style="position: relative;height: 100%;overflow: hidden;background: #f0f2f5;"
     >
       <div
@@ -25,6 +24,7 @@
           </div>
         </div>
         <div
+          v-if="userDialogVisible"
           style="display: flex;flex: 1 1;width: 100%;height: 0;"
         >
           <div
@@ -205,7 +205,7 @@
                         <el-button
                           type="primary"
                           size="mini"
-                          @click="reloadTimeLine"
+                          @click="reloadTimeLine(true)"
                         >确认</el-button>
                         <template slot="reference">
                           <span style="display: flex;align-items: center;height: 32px;cursor: pointer"><i class="el-icon-location-outline" />定位事件</span>
@@ -294,6 +294,7 @@
         <el-select
           v-model="product"
           style="width: 120px"
+          @change="changeSelectList"
         >
           <el-option
             v-for="(item,index) in productList"
@@ -400,6 +401,7 @@ export default {
       attrValue: '',
       attr: 'userId',
       userAttrList: [{ label: 'user_id', value: 'userId' }, { label: 'uid', value: 'uid' }, { label: 'country', value: 'country' }],
+      userAttrYohoList: [{ label: 'uid', value: 'uid' }, { label: 'country', value: 'country' }],
       productList: ['Mico', 'Yoho'],
       operatorList: [{ label: '等于', value: '=' }],
       operator: '=',
@@ -728,6 +730,15 @@ export default {
     this.getOptions()
   },
   methods: {
+    changeSelectList() {
+      if (this.product === 'Mico') {
+        this.attr = 'userId'
+        this.userAttrList = [{ label: 'user_id', value: 'userId' }, { label: 'uid', value: 'uid' }, { label: 'country', value: 'country' }]
+      } else {
+        this.attr = 'uid'
+        this.userAttrList = [{ label: 'uid', value: 'uid' }, { label: 'country', value: 'country' }]
+      }
+    },
     filterNode(value, data) {
       if (!value) return true
       return data.label.indexOf(value) !== -1
@@ -885,11 +896,12 @@ export default {
         }
         this.barProcess()
         this.barDetailProcess()
-      }, 200)
+      }, 300)
     },
     enterQuery(row) {
       this.userId = row.userId
       this.attrList = row.userInfo
+      this.getOptions()
       this.closeUserQuery()
     },
     reloadChart() {
@@ -913,14 +925,14 @@ export default {
         this.myChart.resize({ height: 350, width: window.innerWidth - 328 })
       })
     },
-    reloadTimeLine() {
+    reloadTimeLine(flag) {
       this.eventFlag = false
       this.showTimeline = true
       this.percentageDetail = 15
       this.barDetailProcess()
       this.pageNo = 1
       const op = this.$refs.treeDetail.getCheckedNodes()
-      if (this.currentDate !== '') {
+      if (this.currentDate !== '' && flag) {
         getUserEventDetailForDate({ userId: this.userId, product: this.product,
           date: this.currentDate, eventList: op, sort: this.sortOperator, pageNo: this.pageNo }).then(response => {
           this.showTimeline = false
@@ -971,7 +983,7 @@ export default {
       this.totalFlag = false
       this.reloadChart()
       setTimeout(() => {
-        this.reloadTimeLine()
+        this.reloadTimeLine(false)
       }, 100)
     },
     showNumber() {
@@ -987,7 +999,7 @@ export default {
       } else {
         this.sortOperator = 'desc'
       }
-      this.reloadTimeLine()
+      this.reloadTimeLine(true)
     },
     showPie() {
       if (this.switchPieValue) {

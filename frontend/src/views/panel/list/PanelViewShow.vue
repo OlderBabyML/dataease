@@ -106,15 +106,27 @@
             <!--              </de-btn>-->
             <!--            </span>-->
 
+            <!--            <span-->
+            <!--              v-if="panelInfo.status==='publish' && !isOtherPlatform"-->
+            <!--              style="float: right;margin-right: 10px"-->
+            <!--            >-->
+            <!--              <de-btn-->
+            <!--                secondary-->
+            <!--                @click="clickFullscreen"-->
+            <!--              >-->
+            <!--                {{ $t('panel.fullscreen_preview') }}-->
+            <!--              </de-btn>-->
+            <!--            </span>-->
+
             <span
               v-if="panelInfo.status==='publish' && !isOtherPlatform"
               style="float: right;margin-right: 10px"
             >
               <de-btn
                 secondary
-                @click="clickFullscreen"
+                @click="newTab"
               >
-                {{ $t('panel.fullscreen_preview') }}
+                {{ $t('panel.new_tab_preview') }}
               </de-btn>
             </span>
 
@@ -166,14 +178,6 @@
                       class="preview-icon-svg"
                     />
                     {{ $t('panel.save_to_panel') }}
-                  </el-dropdown-item>
-
-                  <el-dropdown-item>
-                    <svg-icon
-                      icon-class="warn-tree"
-                      class="preview-icon-svg"
-                    />
-                    {{ $t('panel.setting_clock') }}
                   </el-dropdown-item>
 
                   <el-dropdown-item
