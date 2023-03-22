@@ -357,7 +357,7 @@
             :label="attr"
           />
           <el-table-column
-            label="userId"
+            :label="attr ==='uid'?'uid':'userId'"
           >
             <template slot-scope="{row}">
               <el-link
@@ -402,7 +402,8 @@ export default {
       attr: 'userId',
       userAttrList: [{ label: 'user_id', value: 'userId' }, { label: 'uid', value: 'uid' }, { label: 'country', value: 'country' }],
       userAttrYohoList: [{ label: 'uid', value: 'uid' }, { label: 'country', value: 'country' }],
-      productList: ['Mico', 'Yoho'],
+      userAttrSoMatchList: [{ label: 'uid', value: 'uid' }],
+      productList: ['Mico', 'Yoho', 'SoMatch'],
       operatorList: [{ label: '等于', value: '=' }],
       operator: '=',
       product: 'Mico',
@@ -484,7 +485,8 @@ export default {
       pieOptions: {
         tooltip: {
           trigger: 'item',
-          formatter: '{a} <br/>{b}: {c} ({d}%)'
+          formatter: '{a} <br/>{b}: {c} ({d}%)',
+          position: ['20%', '50%']
         },
         series: [
           {
@@ -727,16 +729,18 @@ export default {
     this.$nextTick(() => {
       this.$store.dispatch('app/toggleSideBarHide', true)
     })
-    this.getOptions()
   },
   methods: {
     changeSelectList() {
       if (this.product === 'Mico') {
         this.attr = 'userId'
         this.userAttrList = [{ label: 'user_id', value: 'userId' }, { label: 'uid', value: 'uid' }, { label: 'country', value: 'country' }]
-      } else {
+      } else if (this.product === 'Yoho') {
         this.attr = 'uid'
         this.userAttrList = [{ label: 'uid', value: 'uid' }, { label: 'country', value: 'country' }]
+      } else {
+        this.attr = 'uid'
+        this.userAttrList = [{ label: 'uid', value: 'uid' }]
       }
     },
     filterNode(value, data) {
@@ -832,7 +836,7 @@ export default {
       this.showChart = true
       this.showTimeline = true
       this.pageNo = 1
-      this.percentag = 15
+      this.percentage = 15
       this.percentageDetail = 15
       this.userDialogVisible = true
       this.dialogVisible = false
@@ -901,8 +905,19 @@ export default {
     enterQuery(row) {
       this.userId = row.userId
       this.attrList = row.userInfo
-      this.getOptions()
-      this.closeUserQuery()
+      getOptions({ product: this.product }).then(response => {
+        this.totalOption = response.data
+        let flag = true
+        this.totalOption.forEach((item) => {
+          if (item.id === 'technology' && item.children.length > 0) {
+            flag = false
+          }
+        })
+        if (flag) {
+          this.defaultTree[0] = this.totalOption[0].id
+        }
+        this.closeUserQuery()
+      })
     },
     reloadChart() {
       this.getTreeCheckedNodes()

@@ -47,6 +47,7 @@ import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.pentaho.di.core.util.UUIDUtil;
+import org.quartz.SchedulerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -138,9 +139,10 @@ public class PanelGroupService {
     private DatasetGroupMapper datasetGroupMapper;
     @Resource
     private PanelWatermarkMapper panelWatermarkMapper;
-
     @Resource
     private DatasourceMapper datasourceMapper;
+    @Resource
+    private SchedulerIndexMapper schedulerIndexMapper;
 
     public List<PanelGroupDTO> tree(PanelGroupRequest panelGroupRequest) {
         String userId = String.valueOf(AuthUtils.getUser().getUserId());
@@ -313,6 +315,17 @@ public class PanelGroupService {
         extPanelLinkJumpMapper.deleteJumpTargetViewInfoWithPanel(id);
         extPanelLinkJumpMapper.deleteJumpInfoWithPanel(id);
         extPanelLinkJumpMapper.deleteJumpWithPanel(id);
+        //删除报警
+        PanelViewExample panelViewExample = new PanelViewExample();
+        panelViewExample.createCriteria().andPanelIdEqualTo(id);
+        List<PanelView> panelViews = panelViewMapper.selectByExample(panelViewExample);
+        ArrayList<String> chartIdList = new ArrayList<>();
+        for (PanelView panelView : panelViews) {
+            chartIdList.add(panelView.getChartViewId());
+        }
+        SchedulerIndexExample schedulerIndexExample = new SchedulerIndexExample();
+        schedulerIndexExample.createCriteria().andChartIdIn(chartIdList);
+        schedulerIndexMapper.deleteByExample(schedulerIndexExample);
         DeLogUtils.save(sysLogDTO);
     }
 
@@ -449,6 +462,30 @@ public class PanelGroupService {
             extPanelViewLinkageMapper.copyViewLinkageField(copyId);
         }
         panelGroupMapper.insertSelective(newPanel);
+        //复制报警数据
+        ArrayList<String> chartIdList = new ArrayList<>();
+        PanelViewExample panelViewExample = new PanelViewExample();
+        panelViewExample.createCriteria().andPanelIdEqualTo(sourcePanelId);
+        List<PanelView> panelViews = panelViewMapper.selectByExample(panelViewExample);
+        for (PanelView panelView : panelViews) {
+            chartIdList.add(panelView.getChartViewId());
+        }
+        SchedulerIndexExample schedulerIndexExample = new SchedulerIndexExample();
+        schedulerIndexExample.createCriteria().andChartIdIn(chartIdList);
+        List<SchedulerIndexWithBLOBs> withBLOBs = schedulerIndexMapper.selectByExampleWithBLOBs(schedulerIndexExample);
+        for (SchedulerIndexWithBLOBs withBLOB : withBLOBs) {
+            for (PanelView panelView : panelViewList) {
+                if (panelView.getCopyFromView().equals(withBLOB.getChartId())) {
+                    withBLOB.setChartId(panelView.getChartViewId());
+                }
+            }
+            withBLOB.setId(null);
+            try {
+                chartViewService.saveScheduler(withBLOB);
+            } catch (SchedulerException e) {
+                e.printStackTrace();
+            }
+        }
         return newPanelId;
     }
 

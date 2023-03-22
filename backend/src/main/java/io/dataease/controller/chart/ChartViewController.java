@@ -8,13 +8,13 @@ import io.dataease.auth.annotation.DePermission;
 import io.dataease.auth.annotation.DePermissionProxy;
 import io.dataease.commons.constants.DePermissionType;
 import io.dataease.commons.constants.ResourceAuthLevel;
+import io.dataease.commons.utils.DateUtils;
 import io.dataease.commons.utils.PageUtils;
 import io.dataease.commons.utils.Pager;
 import io.dataease.controller.request.chart.*;
 import io.dataease.controller.response.ChartDetail;
 import io.dataease.dto.chart.ChartViewDTO;
 import io.dataease.dto.chart.ViewOption;
-import io.dataease.job.sechedule.ScheduleManager;
 import io.dataease.plugins.common.base.domain.ChartViewWithBLOBs;
 import io.dataease.plugins.common.base.domain.SchedulerIndexWithBLOBs;
 import io.dataease.plugins.common.base.domain.SysLogWithBLOBs;
@@ -77,9 +77,12 @@ public class ChartViewController {
 
     @ApiOperation("查询报警日志")
     @PostMapping("/scheduler/log/{goPage}/{pageSize}")
-    public Pager<List<SysLogWithBLOBs>> logScheduler(@PathVariable int goPage, @PathVariable int pageSize, @RequestBody SchedulerIndexWithBLOBs request) {
+    public Pager<List<SysLogWithBLOBs>> logScheduler(@PathVariable int goPage, @PathVariable int pageSize, @RequestBody SchedulerIndexWithBLOBs request) throws Exception {
         Page<Object> page = PageHelper.startPage(goPage, pageSize, true);
         List<SysLogWithBLOBs> sysLogWithBLOBs = logService.queryForSourceId(request.getId().toString());
+        for (SysLogWithBLOBs sysLogWithBLOB : sysLogWithBLOBs) {
+            sysLogWithBLOB.setNickName(DateUtils.getTimeString(sysLogWithBLOB.getTime()));
+        }
         return PageUtils.setPageInfo(page, sysLogWithBLOBs);
     }
 
