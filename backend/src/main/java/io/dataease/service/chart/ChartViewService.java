@@ -61,7 +61,6 @@ import io.dataease.service.panel.PanelGroupExtendDataService;
 import io.dataease.service.sys.log.LogService;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
-import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.pentaho.di.core.util.UUIDUtil;
 import org.quartz.*;
@@ -76,8 +75,8 @@ import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.SimpleDateFormat;
-import java.util.*;
 import java.util.Calendar;
+import java.util.*;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -131,7 +130,8 @@ public class ChartViewService {
     private DatasetTableFieldMapper datasetTableFieldMapper;
     @Resource
     private ScheduleManager scheduleManager;
-
+    @Resource
+    private DataSetFieldService dataSetFieldService;
     @Resource
     private LogService logService;
 
@@ -1500,11 +1500,11 @@ public class ChartViewService {
         chartViewDTO = uniteViewResult(datasourceRequest.getQuery(), mapChart, mapTableNormal, view, isDrill, drillFilters, dynamicAssistFields, assistData);
         chartViewDTO.setTotalPage(totalPage);
         chartViewDTO.setTotalItems(totalItems);
-        checkTextAlarm(chartViewDTO, view);
+        chartViewDTO = checkTextAlarm(chartViewDTO, view, extFilterList);
         return chartViewDTO;
     }
 
-    public void checkTextAlarm(ChartViewDTO chartViewDTO, ChartViewDTO view) throws Exception {
+    public ChartViewDTO checkTextAlarm(ChartViewDTO chartViewDTO, ChartViewDTO view, List<ChartExtFilterRequest> extFilterList) throws Exception {
         SchedulerIndexExample schedulerIndexExample = new SchedulerIndexExample();
         schedulerIndexExample.createCriteria().andChartIdEqualTo(chartViewDTO.getId());
         List<SchedulerIndexWithBLOBs> schedulerIndexWithBLOBs = schedulerIndexMapper.selectByExampleWithBLOBs(schedulerIndexExample);
@@ -1536,6 +1536,7 @@ public class ChartViewService {
                     startimeMillis = endTimeMillis - timeNumber * 1000 * 60 * 60 * 24;
                     break;
             }
+
             ChartFieldCustomFilterDTO chartFieldCustomFilterDTO = gson.fromJson(schedulerIndexWithBLOB.getTimeField(), tokenType);
             ArrayList<ChartCustomFilterItemDTO> chartCustomFilterItemDTOS = new ArrayList<>();
             ChartCustomFilterItemDTO chartCustomFilterItemDTO = new ChartCustomFilterItemDTO();
@@ -1549,7 +1550,10 @@ public class ChartViewService {
             chartCustomFilterItemDTO1.setFieldId(chartFieldCustomFilterDTO.getId());
             chartCustomFilterItemDTO1.setTerm("le");
             chartCustomFilterItemDTO1.setValue(DateUtils.getDateString(endTimeMillis, schedulerIndexWithBLOB.getFormat()));
-            ArrayList<HashMap> tableRow = (ArrayList) chartViewDTO.getData().get("tableRow");
+
+            ChartFieldCustomFilterDTO fieldCustomFilterTypeTime = gson.fromJson(schedulerIndexWithBLOB.getTimeField(), tokenType);
+            fieldCustomFilterTypeTime.setFilter(chartCustomFilterItemDTOS);
+
             ChartViewFieldDTO index = gson.fromJson(schedulerIndexWithBLOB.getIndexField(), indexType);
             List<RuleAndSend> rules = gson.fromJson(schedulerIndexWithBLOB.getRules(), ruleType);
             for (RuleAndSend rule : rules) {
@@ -1557,16 +1561,57 @@ public class ChartViewService {
                 String type = rule.getType();
                 String condition = rule.getCondition();
                 String conditionValue = rule.getConditionValue();
+                String ruleDatabaseName = null;
+                ChartFieldCustomFilterDTO fieldCustomFilterType = new ChartFieldCustomFilterDTO();
+                Type tokenTypes = new TypeToken<List<ChartFieldCustomFilterDTO>>() {
+                }.getType();
+                Type xFields = new TypeToken<List<ChartViewFieldDTO>>() {
+                }.getType();
+                List<ChartViewFieldDTO> xAxis = gson.fromJson(view.getXAxis(), xFields);
+                List<ChartFieldCustomFilterDTO> fieldCustomFilters = gson.fromJson(view.getCustomFilter(), tokenTypes);
+                List<ChartFieldCustomFilterDTO> fieldCustomFilter = new ArrayList<>();
                 if (!org.apache.commons.lang.StringUtils.isEmpty(condition) && !org.apache.commons.lang.StringUtils.isEmpty(conditionValue)) {
-                    ArrayList<ChartCustomFilterItemDTO> clone = SerializationUtils.clone(chartCustomFilterItemDTOS);
+                    DatasetTableField dataSetField = dataSetFieldService.getDataSetField(condition);
+//                    ArrayList<ChartCustomFilterItemDTO> clone = SerializationUtils.clone(chartCustomFilterItemDTOS);
+
+                    ArrayList<ChartCustomFilterItemDTO> filterItemDTOS = new ArrayList<>();
                     ChartCustomFilterItemDTO chartCustomFilterItemDTO2 = new ChartCustomFilterItemDTO();
-                    clone.add(chartCustomFilterItemDTO2);
                     chartCustomFilterItemDTO2.setFieldId(condition);
                     chartCustomFilterItemDTO2.setTerm("in");
                     chartCustomFilterItemDTO2.setValue(conditionValue);
-                    chartViewDTO = calcData(view, schedulerIndexWithBLOB.getTimeField(), false, clone);
-                    tableRow = (ArrayList) chartViewDTO.getData().get("tableRow");
+                    filterItemDTOS.add(chartCustomFilterItemDTO2);
+
+                    fieldCustomFilterType.setId(dataSetField.getId());
+                    fieldCustomFilterType.setField(dataSetField);
+                    fieldCustomFilterType.setFilter(filterItemDTOS);
+
+                    fieldCustomFilter.add(fieldCustomFilterType);
+
+                    ChartViewFieldDTO chartViewFieldDTO = new ChartViewFieldDTO();
+                    chartViewFieldDTO.setOriginName(dataSetField.getOriginName());
+                    chartViewFieldDTO.setDataeaseName(dataSetField.getDataeaseName());
+                    chartViewFieldDTO.setDeExtractType(dataSetField.getDeExtractType());
+                    chartViewFieldDTO.setDeType(dataSetField.getDeType());
+                    xAxis.add(chartViewFieldDTO);
+                    view.setXAxis(JSONObject.toJSONString(xAxis));
                 }
+
+                fieldCustomFilter.add(fieldCustomFilterTypeTime);
+                fieldCustomFilter.addAll(fieldCustomFilters);
+                ArrayList<String> ruleNames = new ArrayList<>();
+                for (ChartViewFieldDTO xAxi : xAxis) {
+                    if (!xAxi.getDataeaseName().equals(chartFieldCustomFilterDTO.getDataeaseName())) {
+                        ruleNames.add(xAxi.getDataeaseName());
+                    }
+                }
+                List<ChartViewFieldDTO> xAxisExt = gson.fromJson(view.getXAxisExt(), xFields);
+                for (ChartViewFieldDTO chartViewFieldDTO : xAxisExt) {
+                    ruleNames.add(chartViewFieldDTO.getDataeaseName());
+                }
+                if (ruleNames.size() > 0) {
+                    ruleDatabaseName = org.apache.commons.lang.StringUtils.join(ruleNames, ",");
+                }
+                ArrayList<HashMap> tableRow = (ArrayList) calcData(view, false, fieldCustomFilter, extFilterList).getData().get("tableRow");
                 BigDecimal value = new BigDecimal(rule.getValue());
                 switch (operate) {
                     case "高于":
@@ -1575,23 +1620,97 @@ public class ChartViewService {
                                 BigDecimal o = (BigDecimal) hashMap.get(index.getDataeaseName());
                                 if (o.compareTo(value) > 0) {
                                     chartViewDTO.setAlarmColor(rule.getColor());
+                                    break;
                                 }
                             }
                         } else if (type.equals("环比过去N天平均值")) {
                             Integer numDay = rule.getNumDay();
-                            BigDecimal avgData = getAvgData(index.getDataeaseName(), schedulerIndexWithBLOB.getTimeField(), view, numDay,
-                                    chartFieldCustomFilterDTO.getId(), startimeMillis, endTimeMillis, schedulerIndexWithBLOB.getFormat());
-                            BigDecimal avg = avgData.divide(new BigDecimal(numDay), 8, RoundingMode.HALF_UP);
-                            BigDecimal decimal = value.add(avg.multiply(new BigDecimal(-1))).divide(avg, 8, RoundingMode.HALF_UP).abs();
-                            if (decimal.compareTo(value) > 0) {
-                                chartViewDTO.setAlarmColor(rule.getColor());
+                            HashMap<String, BigDecimal> avgDataMap = getAvgData(index.getDataeaseName(), ruleDatabaseName, schedulerIndexWithBLOB.getTimeField(), view, numDay,
+                                    chartFieldCustomFilterDTO.getId(), startimeMillis, startimeMillis, fieldCustomFilters, fieldCustomFilterType, schedulerIndexWithBLOB.getFormat(), extFilterList);
+                            if (avgDataMap == null || avgDataMap.isEmpty()) {
+                                continue;
                             }
+                            if (ruleDatabaseName != null) {
+                                for (HashMap hashMap : tableRow)
+                                {
+                                    ArrayList<String> indexNameList = new ArrayList<>();
+                                    for (Object o : hashMap.keySet()) {
+                                        if (!o.toString().equals(index.getDataeaseName()) && ruleDatabaseName.contains(o.toString())) {
+                                            indexNameList.add(hashMap.get(o.toString()).toString());
+                                        }
+                                    }
+                                    BigDecimal o = (BigDecimal) hashMap.get(index.getDataeaseName());
+                                    BigDecimal bigDecimal = avgDataMap.get(org.apache.commons.lang.StringUtils.join(indexNameList, ","));
+                                    if (bigDecimal == null) {
+                                        continue;
+                                    }
+                                    BigDecimal avg = bigDecimal.divide(new BigDecimal(numDay), 8, RoundingMode.HALF_UP);
+                                    if (avg.toString().equals("0")) {
+                                        continue;
+                                    }
+                                    BigDecimal decimal = o.add(avg.multiply(new BigDecimal(-1))).divide(avg, 8, RoundingMode.HALF_UP);
+                                    if (decimal.compareTo(value) > 0) {
+                                        chartViewDTO.setAlarmColor(rule.getColor());
+                                        break;
+                                    }
+                                }
+                            } else {
+                                for (HashMap hashMap : tableRow) {
+                                    BigDecimal o = (BigDecimal) hashMap.get(index.getDataeaseName());
+                                    BigDecimal bigDecimal = avgDataMap.get("date");
+                                    BigDecimal avg = bigDecimal.divide(new BigDecimal(numDay), 8, RoundingMode.HALF_UP);
+                                    if (avg.toString().equals("0")) {
+                                        continue;
+                                    }
+                                    BigDecimal decimal = o.add(avg.multiply(new BigDecimal(-1))).divide(avg, 8, RoundingMode.HALF_UP);
+                                    if (decimal.compareTo(value) > 0) {
+                                        chartViewDTO.setAlarmColor(rule.getColor());
+                                        break;
+                                    }
+                                }
+                            }
+
                         } else if (type.equals("同比上月同期")) {
-                            BigDecimal avgData = getMonthData(index.getDataeaseName(), schedulerIndexWithBLOB.getTimeField(), view,
-                                    chartFieldCustomFilterDTO.getId(), startimeMillis, endTimeMillis, schedulerIndexWithBLOB.getFormat());
-                            BigDecimal decimal = value.add(avgData.multiply(new BigDecimal(-1))).divide(avgData, 8, RoundingMode.HALF_UP).abs();
-                            if (decimal.compareTo(value) > 0) {
-                                chartViewDTO.setAlarmColor(rule.getColor());
+                            HashMap<String, BigDecimal> avgDataMap = getMonthData(index.getDataeaseName(), ruleDatabaseName, schedulerIndexWithBLOB.getTimeField(), view,
+                                    chartFieldCustomFilterDTO.getId(), startimeMillis, startimeMillis, fieldCustomFilters, fieldCustomFilterType, schedulerIndexWithBLOB.getFormat(), extFilterList);
+                            if (avgDataMap == null || avgDataMap.isEmpty()) {
+                                continue;
+                            }
+                            if (ruleDatabaseName != null) {
+                                for (HashMap hashMap : tableRow) {
+                                    ArrayList<String> indexNameList = new ArrayList<>();
+                                    for (Object o : hashMap.keySet()) {
+                                        if (!o.toString().equals(index.getDataeaseName()) && ruleDatabaseName.contains(o.toString())) {
+                                            indexNameList.add(hashMap.get(o.toString()).toString());
+                                        }
+                                    }
+                                    BigDecimal o = (BigDecimal) hashMap.get(index.getDataeaseName());
+                                    BigDecimal bigDecimal = avgDataMap.get(org.apache.commons.lang.StringUtils.join(indexNameList, ","));
+                                    if (bigDecimal == null) {
+                                        continue;
+                                    }
+                                    if (bigDecimal.toString().equals("0")) {
+                                        continue;
+                                    }
+                                    BigDecimal avg = o.divide(bigDecimal, 8, RoundingMode.HALF_UP);
+                                    if (avg.compareTo(value) > 0) {
+                                        chartViewDTO.setAlarmColor(rule.getColor());
+                                        break;
+                                    }
+                                }
+                            } else {
+                                for (HashMap hashMap : tableRow) {
+                                    BigDecimal o = (BigDecimal) hashMap.get(index.getDataeaseName());
+                                    BigDecimal bigDecimal = avgDataMap.get("date");
+                                    if (bigDecimal != null && bigDecimal.toString().equals("0")) {
+                                        continue;
+                                    }
+                                    BigDecimal avg = o.divide(bigDecimal, 8, RoundingMode.HALF_UP);
+                                    if (avg.compareTo(value) > 0) {
+                                        chartViewDTO.setAlarmColor(rule.getColor());
+                                        break;
+                                    }
+                                }
                             }
                         }
                         break;
@@ -1601,34 +1720,108 @@ public class ChartViewService {
                                 BigDecimal o = (BigDecimal) hashMap.get(index.getDataeaseName());
                                 if (o.compareTo(value) < 0) {
                                     chartViewDTO.setAlarmColor(rule.getColor());
+                                    break;
                                 }
                             }
                         } else if (type.equals("环比过去N天平均值")) {
                             Integer numDay = rule.getNumDay();
-                            BigDecimal avgData = getAvgData(index.getDataeaseName(), schedulerIndexWithBLOB.getTimeField(), view, numDay,
-                                    chartFieldCustomFilterDTO.getId(), startimeMillis, endTimeMillis, schedulerIndexWithBLOB.getFormat());
-                            BigDecimal avg = avgData.divide(new BigDecimal(numDay), 8, RoundingMode.HALF_UP);
-                            BigDecimal decimal = value.add(avg.multiply(new BigDecimal(-1))).divide(avg, 8, RoundingMode.HALF_UP).abs();
-                            if (decimal.compareTo(value) < 0) {
-                                chartViewDTO.setAlarmColor(rule.getColor());
+                            HashMap<String, BigDecimal> avgDataMap = getAvgData(index.getDataeaseName(), ruleDatabaseName, schedulerIndexWithBLOB.getTimeField(), view, numDay,
+                                    chartFieldCustomFilterDTO.getId(), startimeMillis, startimeMillis, fieldCustomFilters, fieldCustomFilterType, schedulerIndexWithBLOB.getFormat(), extFilterList);
+                            if (avgDataMap == null || avgDataMap.isEmpty()) {
+                                continue;
                             }
+                            if (ruleDatabaseName != null) {
+                                for (HashMap hashMap : tableRow) {
+                                    ArrayList<String> indexNameList = new ArrayList<>();
+                                    for (Object o : hashMap.keySet()) {
+                                        if (!o.toString().equals(index.getDataeaseName()) && ruleDatabaseName.contains(o.toString())) {
+                                            indexNameList.add(hashMap.get(o.toString()).toString());
+                                        }
+                                    }
+                                    BigDecimal o = (BigDecimal) hashMap.get(index.getDataeaseName());
+                                    BigDecimal bigDecimal = avgDataMap.get(org.apache.commons.lang.StringUtils.join(indexNameList, ","));
+                                    if (bigDecimal == null) {
+                                        continue;
+                                    }
+                                    BigDecimal avg = bigDecimal.divide(new BigDecimal(numDay), 8, RoundingMode.HALF_UP);
+                                    if (avg.toString().equals("0")) {
+                                        continue;
+                                    }
+                                    BigDecimal decimal = o.add(avg.multiply(new BigDecimal(-1))).divide(avg, 8, RoundingMode.HALF_UP);
+                                    if (decimal.compareTo(value) < 0) {
+                                        chartViewDTO.setAlarmColor(rule.getColor());
+                                        break;
+                                    }
+                                }
+                            } else {
+                                for (HashMap hashMap : tableRow) {
+                                    BigDecimal o = (BigDecimal) hashMap.get(index.getDataeaseName());
+                                    BigDecimal bigDecimal = avgDataMap.get("date");
+                                    BigDecimal avg = bigDecimal.divide(new BigDecimal(numDay), 8, RoundingMode.HALF_UP);
+                                    if (avg.toString().equals("0")) {
+                                        continue;
+                                    }
+                                    BigDecimal decimal = o.add(avg.multiply(new BigDecimal(-1))).divide(avg, 8, RoundingMode.HALF_UP);
+                                    if (decimal.compareTo(value) < 0) {
+                                        chartViewDTO.setAlarmColor(rule.getColor());
+                                        break;
+                                    }
+                                }
+                            }
+
                         } else if (type.equals("同比上月同期")) {
-                            BigDecimal avgData = getMonthData(index.getDataeaseName(), schedulerIndexWithBLOB.getTimeField(), view,
-                                    chartFieldCustomFilterDTO.getId(), startimeMillis, endTimeMillis, schedulerIndexWithBLOB.getFormat());
-                            BigDecimal decimal = value.add(avgData.multiply(new BigDecimal(-1))).divide(avgData, 8, RoundingMode.HALF_UP).abs();
-                            if (decimal.compareTo(value) < 0) {
-                                chartViewDTO.setAlarmColor(rule.getColor());
+                            HashMap<String, BigDecimal> avgDataMap = getMonthData(index.getDataeaseName(), ruleDatabaseName, schedulerIndexWithBLOB.getTimeField(), view,
+                                    chartFieldCustomFilterDTO.getId(), startimeMillis, startimeMillis, fieldCustomFilters, fieldCustomFilterType, schedulerIndexWithBLOB.getFormat(), extFilterList);
+                            if (avgDataMap == null || avgDataMap.isEmpty()) {
+                                continue;
+                            }
+                            if (ruleDatabaseName != null) {
+                                for (HashMap hashMap : tableRow) {
+                                    ArrayList<String> indexNameList = new ArrayList<>();
+                                    for (Object o : hashMap.keySet()) {
+                                        if (!o.toString().equals(index.getDataeaseName()) && ruleDatabaseName.contains(o.toString())) {
+                                            indexNameList.add(hashMap.get(o.toString()).toString());
+                                        }
+                                    }
+                                    BigDecimal o = (BigDecimal) hashMap.get(index.getDataeaseName());
+                                    BigDecimal bigDecimal = avgDataMap.get(org.apache.commons.lang.StringUtils.join(indexNameList, ","));
+                                    if (bigDecimal == null) {
+                                        continue;
+                                    }
+                                    if (bigDecimal.toString().equals("0")) {
+                                        continue;
+                                    }
+                                    BigDecimal avg = o.divide(bigDecimal, 8, RoundingMode.HALF_UP);
+                                    if (avg.compareTo(value) < 0) {
+                                        chartViewDTO.setAlarmColor(rule.getColor());
+                                        break;
+                                    }
+                                }
+                            } else {
+                                for (HashMap hashMap : tableRow) {
+                                    BigDecimal o = (BigDecimal) hashMap.get(index.getDataeaseName());
+                                    BigDecimal bigDecimal = avgDataMap.get("date");
+                                    if (bigDecimal != null && bigDecimal.toString().equals("0")) {
+                                        continue;
+                                    }
+                                    BigDecimal avg = o.divide(bigDecimal, 8, RoundingMode.HALF_UP);
+                                    if (avg.compareTo(value) < 0) {
+                                        chartViewDTO.setAlarmColor(rule.getColor());
+                                        break;
+                                    }
+                                }
                             }
                         }
                         break;
                 }
             }
         }
+        return chartViewDTO;
     }
 
-    public BigDecimal getAvgData(String index, String timeField, ChartViewDTO view, Integer numDay, String fieldId, Long startimeMillis, Long endTimeMillis, String format) throws Exception {
-        BigDecimal sum = new BigDecimal(0);
+    public HashMap<String, BigDecimal> getAvgData(String index, String ruleDatabaseName, String timeField, ChartViewDTO view, Integer numDay, String fieldId, Long startimeMillis, Long endTimeMillis, List<ChartFieldCustomFilterDTO> fieldCustomFilters, ChartFieldCustomFilterDTO condition, String format, List<ChartExtFilterRequest> extFilterList) throws Exception {
         int i = 1;
+        HashMap<String, BigDecimal> map = new HashMap<>();
         while (i <= numDay) {
             ArrayList<ChartCustomFilterItemDTO> chartCustomFilterItemDTOList = new ArrayList<>();
             ChartCustomFilterItemDTO chartCustom = new ChartCustomFilterItemDTO();
@@ -1642,20 +1835,48 @@ public class ChartViewService {
             chartCustom1.setFieldId(fieldId);
             chartCustom1.setTerm("le");
             chartCustom1.setValue(DateUtils.getDateString(endTimeMillis - i * 1000 * 60 * 60 * 24, format));
-            ChartViewDTO chartView = calcData(view, timeField, false, chartCustomFilterItemDTOList);
+
+            Type filterTokenType = new TypeToken<ChartFieldCustomFilterDTO>() {
+            }.getType();
+            ChartFieldCustomFilterDTO fieldCustomFilterType = gson.fromJson(timeField, filterTokenType);
+            fieldCustomFilterType.setFilter(chartCustomFilterItemDTOList);
+            List<ChartFieldCustomFilterDTO> fieldCustomFilter = new ArrayList<>();
+            fieldCustomFilter.add(fieldCustomFilterType);
+            fieldCustomFilter.add(condition);
+            fieldCustomFilter.addAll(fieldCustomFilters);
+
+            ChartViewDTO chartView = calcData(view, false, fieldCustomFilter, extFilterList);
             ArrayList<HashMap> row = (ArrayList) chartView.getData().get("tableRow");
             for (HashMap hashMap : row) {
                 BigDecimal o = (BigDecimal) hashMap.get(index);
-                sum = sum.add(o);
+                if (ruleDatabaseName != null) {
+                    ArrayList<String> indexNameList = new ArrayList<>();
+                    for (Object o1 : hashMap.keySet()) {
+                        if (!o1.toString().equals(index) && ruleDatabaseName.contains(o1.toString())) {
+                            indexNameList.add(hashMap.get(o1.toString()).toString());
+                        }
+                    }
+                    if (map.containsKey(org.apache.commons.lang.StringUtils.join(indexNameList, ","))) {
+                        map.put(org.apache.commons.lang.StringUtils.join(indexNameList, ","), map.get(org.apache.commons.lang.StringUtils.join(indexNameList, ",")).add(o));
+                    } else {
+                        map.put(org.apache.commons.lang.StringUtils.join(indexNameList, ","), o);
+                    }
+                } else {
+                    if (map.containsKey("date")) {
+                        map.put("date", map.get("date").add(o));
+                    } else {
+                        map.put("date", o);
+                    }
+                }
             }
             i = i + 1;
         }
-        return sum;
+        return map;
     }
 
-    public BigDecimal getMonthData(String index, String timeField, ChartViewDTO view, String fieldId, Long startimeMillis, Long endTimeMillis, String format) throws Exception {
-        BigDecimal sum = new BigDecimal(0);
+    public HashMap<String, BigDecimal> getMonthData(String index, String ruleDatabaseName, String timeField, ChartViewDTO view, String fieldId, Long startimeMillis, Long endTimeMillis, List<ChartFieldCustomFilterDTO> fieldCustomFilters, ChartFieldCustomFilterDTO condition, String format, List<ChartExtFilterRequest> extFilterList) throws Exception {
         int i = 1;
+        HashMap<String, BigDecimal> map = new HashMap<>();
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(new Date(startimeMillis));
         calendar.add(Calendar.MONTH, -1);
@@ -1676,17 +1897,45 @@ public class ChartViewService {
         chartCustom1.setFieldId(fieldId);
         chartCustom1.setTerm("le");
         chartCustom1.setValue(DateUtils.getDateString(calendar1.getTime().getTime(), format));
-        ChartViewDTO chartView = calcData(view, timeField, false, chartCustomFilterItemDTOList);
+
+        Type filterTokenType = new TypeToken<ChartFieldCustomFilterDTO>() {
+        }.getType();
+        ChartFieldCustomFilterDTO fieldCustomFilterType = gson.fromJson(timeField, filterTokenType);
+        fieldCustomFilterType.setFilter(chartCustomFilterItemDTOList);
+        List<ChartFieldCustomFilterDTO> fieldCustomFilter = new ArrayList<>();
+        fieldCustomFilter.add(fieldCustomFilterType);
+        fieldCustomFilter.add(condition);
+        fieldCustomFilter.addAll(fieldCustomFilters);
+
+        ChartViewDTO chartView = calcData(view, false, fieldCustomFilter, extFilterList);
         ArrayList<HashMap> row = (ArrayList) chartView.getData().get("tableRow");
         for (HashMap hashMap : row) {
             BigDecimal o = (BigDecimal) hashMap.get(index);
-            sum = sum.add(o);
+            if (ruleDatabaseName != null) {
+                ArrayList<String> indexNameList = new ArrayList<>();
+                for (Object o1 : hashMap.keySet()) {
+                    if (!o1.toString().equals(index) && ruleDatabaseName.contains(o1.toString())) {
+                        indexNameList.add(hashMap.get(o1.toString()).toString());
+                    }
+                }
+                if (map.containsKey(org.apache.commons.lang.StringUtils.join(indexNameList, ","))) {
+                    map.put(org.apache.commons.lang.StringUtils.join(indexNameList, ","), map.get(org.apache.commons.lang.StringUtils.join(indexNameList, ",")).add(o));
+                } else {
+                    map.put(org.apache.commons.lang.StringUtils.join(indexNameList, ","), o);
+                }
+            } else {
+                if (map.containsKey("date")) {
+                    map.put("date", map.get("date").add(o));
+                } else {
+                    map.put("date", o);
+                }
+            }
         }
-        return sum;
+        return map;
     }
 
 
-    public ChartViewDTO calcData(ChartViewDTO view, String customFilter, boolean cache, List<ChartCustomFilterItemDTO> chartCustomFilterItemDTOS) throws Exception {
+    public ChartViewDTO calcData(ChartViewDTO view, boolean cache, List<ChartFieldCustomFilterDTO> fieldCustomFilter, List<ChartExtFilterRequest> extFilterList) throws Exception {
         ChartViewDTO chartViewDTO = new ChartViewDTO();
         if (ObjectUtils.isEmpty(view)) {
             throw new RuntimeException(Translator.get("i18n_chart_delete"));
@@ -1694,8 +1943,6 @@ public class ChartViewService {
         Type tokenType = new TypeToken<List<ChartViewFieldDTO>>() {
         }.getType();
 
-        Type filterTokenType = new TypeToken<ChartFieldCustomFilterDTO>() {
-        }.getType();
 
         List<ChartViewFieldDTO> viewFields = gson.fromJson(view.getViewFields(), tokenType);
         final Map<String, List<ChartViewFieldDTO>> extFieldsMap = new LinkedHashMap<>();
@@ -1727,12 +1974,7 @@ public class ChartViewService {
         }
         List<ChartViewFieldDTO> extStack = gson.fromJson(view.getExtStack(), tokenType);
         List<ChartViewFieldDTO> extBubble = gson.fromJson(view.getExtBubble(), tokenType);
-        ChartFieldCustomFilterDTO fieldCustomFilterList = gson.fromJson(customFilter, filterTokenType);
-        List<ChartFieldCustomFilterDTO> fieldCustomFilter = new ArrayList<>();
-        fieldCustomFilter.add(fieldCustomFilterList);
-        for (ChartFieldCustomFilterDTO chartFieldCustomFilterDTO : fieldCustomFilter) {
-            chartFieldCustomFilterDTO.setFilter(chartCustomFilterItemDTOS);
-        }
+
         //List<ChartViewFieldDTO> drill = gson.fromJson(view.getDrillFields(), tokenType);
 
         // 视图计算字段，用dataeaseName作为唯一标识
@@ -1754,7 +1996,7 @@ public class ChartViewService {
         //将没有权限的列删掉
         List<String> dataeaseNames = columnPermissionFields.stream().map(DatasetTableField::getDataeaseName).collect(Collectors.toList());
         dataeaseNames.add("*");
-        fieldCustomFilter = fieldCustomFilter.stream().filter(item -> chartViewFieldNameList.contains(item.getDataeaseName()) || (!desensitizationList.keySet().contains(item.getDataeaseName()) && dataeaseNames.contains(item.getDataeaseName()))).collect(Collectors.toList());
+        // fieldCustomFilter = fieldCustomFilter.stream().filter(item -> chartViewFieldNameList.contains(item.getDataeaseName()) || (!desensitizationList.keySet().contains(item.getDataeaseName()) && dataeaseNames.contains(item.getDataeaseName()))).collect(Collectors.toList());
         extStack = extStack.stream().filter(item -> chartViewFieldNameList.contains(item.getDataeaseName()) || (!desensitizationList.keySet().contains(item.getDataeaseName()) && dataeaseNames.contains(item.getDataeaseName()))).collect(Collectors.toList());
         extBubble = extBubble.stream().filter(item -> chartViewFieldNameList.contains(item.getDataeaseName()) || (!desensitizationList.keySet().contains(item.getDataeaseName()) && dataeaseNames.contains(item.getDataeaseName()))).collect(Collectors.toList());
         //drill = drill.stream().filter(item -> chartViewFieldNameList.contains(item.getDataeaseName()) || (!desensitizationList.keySet().contains(item.getDataeaseName()) && dataeaseNames.contains(item.getDataeaseName()))).collect(Collectors.toList());
@@ -1813,9 +2055,6 @@ public class ChartViewService {
                 xAxis = xAxis.stream().filter(item -> chartViewFieldNameList.contains(item.getDataeaseName()) || (!desensitizationList.keySet().contains(item.getDataeaseName()) && dataeaseNames.contains(item.getDataeaseName()))).collect(Collectors.toList());
                 yAxis = yAxis.stream().filter(item -> chartViewFieldNameList.contains(item.getDataeaseName()) || (!desensitizationList.keySet().contains(item.getDataeaseName()) && dataeaseNames.contains(item.getDataeaseName()))).collect(Collectors.toList());
         }
-
-        // 过滤来自仪表板的条件
-        List<ChartExtFilterRequest> extFilterList = new ArrayList<>();
 
         List<ChartExtFilterRequest> filters = new ArrayList<>();
 

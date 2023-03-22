@@ -7,12 +7,13 @@ import io.dataease.commons.model.BaseTreeNode;
 import io.dataease.commons.utils.BeanUtils;
 import io.dataease.commons.utils.LogUtil;
 import io.dataease.commons.utils.TreeUtils;
+import io.dataease.dto.dataset.DataSetTableUnionDTO;
+import io.dataease.dto.dataset.DataTableInfoDTO;
 import io.dataease.dto.dataset.DeSortDTO;
+import io.dataease.i18n.Translator;
 import io.dataease.plugins.common.base.domain.DatasetTable;
 import io.dataease.plugins.common.base.domain.DatasetTableField;
 import io.dataease.plugins.common.base.domain.Datasource;
-import io.dataease.commons.constants.ColumnPermissionConstants;
-import io.dataease.i18n.Translator;
 import io.dataease.plugins.common.constants.DatasetType;
 import io.dataease.plugins.common.dto.chart.ChartFieldCustomFilterDTO;
 import io.dataease.plugins.common.dto.datasource.DeSortField;
@@ -24,8 +25,6 @@ import io.dataease.plugins.xpack.auth.dto.request.ColumnPermissionItem;
 import io.dataease.provider.ProviderFactory;
 import io.dataease.service.dataset.*;
 import io.dataease.service.datasource.DatasourceService;
-import io.dataease.dto.dataset.DataSetTableUnionDTO;
-import io.dataease.dto.dataset.DataTableInfoDTO;
 import io.dataease.service.engine.EngineService;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
@@ -60,6 +59,11 @@ public class DirectFieldService implements DataSetFieldService {
         List<String> fieldIds = new ArrayList<>();
         fieldIds.add(fieldId);
         return fieldValues(fieldIds, null, userId, userPermissions, false, rowAndColumnMgm);
+    }
+
+    @Override
+    public DatasetTableField getDataSetField(String fieldId) {
+        return dataSetTableFieldsService.selectByPrimaryKey(fieldId);
     }
 
     @Override

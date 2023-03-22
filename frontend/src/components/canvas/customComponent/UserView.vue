@@ -190,7 +190,7 @@
         />
         <el-table-column
           prop="failed"
-          label="累计成功报警次数"
+          label="累计失败报警次数"
         />
         <el-table-column
           prop="lastTime"
@@ -360,7 +360,7 @@
               </el-form-item>
             </el-form>
           </div>
-          <div style="height: 33%;background-color: #FFFFFF;padding: 5%;margin: 10px">
+          <div style="background-color: #FFFFFF;padding: 5%;margin: 10px">
             <div style="font-weight: bold;margin-bottom: 15px;font-size: 16px">{{ '设置预警规则' }}</div>
             <el-divider />
             <el-form
@@ -517,7 +517,7 @@
               </el-form-item>
             </el-form>
           </div>
-          <div style="height: 34%;background-color: #FFFFFF;padding: 5%;margin: 10px">
+          <div style="background-color: #FFFFFF;padding: 5%;margin: 10px">
             <div style="font-weight: bold;margin-bottom: 15px;font-size: 16px">{{ '通知方式' }}</div>
             <el-divider />
             <el-form
@@ -612,6 +612,13 @@
           @size-change="handleSizeChange"
           @current-change="handleCurrentChange"
         >
+          <el-table-column type="expand">
+            <template slot-scope="{row}">
+              <json-viewer
+                :value="JSON.parse(row.remark)"
+              />
+            </template>
+          </el-table-column>
           <el-table-column
             key="id"
             align="center"
@@ -627,11 +634,11 @@
             prop="sourceName"
           />
           <el-table-column
-            key="remarks"
+            key="remark"
             show-overflow-tooltip
             align="center"
             label="详细信息"
-            prop="remarks"
+            prop="remark"
           />
           <el-table-column
             key="operateType"
@@ -645,11 +652,11 @@
             </template>
           </el-table-column>
           <el-table-column
-            key="time"
+            key="nickName"
             show-overflow-tooltip
             align="center"
             label="调度时间"
-            prop="time"
+            prop="nickName"
           />
         </grid-table>
       </div>
@@ -706,10 +713,12 @@ import UserViewMobileDialog from '@/components/canvas/customComponent/UserViewMo
 import Crontab from '@/components/dispatch/Crontab/index'
 import msgCfm from '@/components/msgCfm/index'
 import GridTable from '@/components/gridTable/index.vue'
+import JsonViewer from 'vue-json-viewer'
 
 export default {
   name: 'UserView',
   components: {
+    JsonViewer,
     UserViewMobileDialog,
     UserViewDialog,
     DeRichTextView,
@@ -1100,7 +1109,6 @@ export default {
     this.refId = uuid.v1
     if (this.element && this.element.propValue && this.element.propValue.viewId) {
       // 如果watch.filters 已经进行数据初始化时候，此处放弃数据初始化
-
       this.getData(this.element.propValue.viewId, false)
     }
   },
@@ -1325,6 +1333,8 @@ export default {
             this.view = response.data
             if (typeof this.view.alarmColor !== 'undefined' && this.view.alarmColor !== null) {
               this.$emit('set-alarm-color', this.view.alarmColor)
+            } else {
+              this.$emit('set-alarm-color', '')
             }
             if (this.chart.type.includes('table')) {
               this.$store.commit('setLastViewRequestInfo', { viewId: id, requestInfo: requestInfo })
@@ -1633,7 +1643,7 @@ export default {
       this.alarm.rules.splice(index, 1)
     },
     addAlarmRuleType() {
-      this.alarm.rules.push({ type: '固定值', operate: '高于', color: '#FF4500' })
+      this.alarm.rules.push({ type: '固定值', operate: '高于', color: '#FF4500', send: { type: '飞书群组' }})
     },
     logOut() {
       this.chartAlarmVisible = false

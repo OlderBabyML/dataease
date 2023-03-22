@@ -31,9 +31,13 @@ public class UserQueryService {
 
     private static String yohoDw = "yoho_dw";
 
+    private static String somatchDw = "somatch_dw";
+
     private static String micoAl = "mico_al";
 
     private static String yohoAl = "yoho_al";
+
+    private static String somatchAl = "somatch_al";
 
     public List<JSONObject> getUserInfo(UserInfoDTO userInfoDTO) throws Exception {
         List<JSONObject> users = new ArrayList<>();
@@ -123,6 +127,8 @@ public class UserQueryService {
         String product = micoAl;
         if (userInfoDTO.getProduct().equals("Yoho")) {
             product = yohoAl;
+        } else if (userInfoDTO.getProduct().equals("SoMatch")) {
+            product = somatchAl;
         }
         DatasourceRequest datasourceRequest = new DatasourceRequest();
         List<Datasource> dw = datasourceService.selectByTypeAndName(DatasourceTypes.impala.getType(), product);
@@ -132,6 +138,10 @@ public class UserQueryService {
             datasourceRequest.setDatasource(dw.get(0));
             datasourceRequest.setQuery(sql);
             List<JSONObject> jsonData = jdbcProvider.getJsonRowData(datasourceRequest);
+            if (jsonData.size() == 0) {
+                datasourceRequest.setQuery(sql);
+                jsonData = jdbcProvider.getJsonRowData(datasourceRequest);
+            }
             for (JSONObject object : jsonData) {
                 String type = object.getString("event_type");
                 switch (type) {
@@ -186,6 +196,9 @@ public class UserQueryService {
         String columnName = "user_id";
         if (userInfoDTO.getProduct().equals("Yoho")) {
             product = yohoDw;
+            columnName = "uid";
+        } else if (userInfoDTO.getProduct().equals("SoMatch")) {
+            product = somatchDw;
             columnName = "uid";
         }
         DatasourceRequest datasourceRequest = new DatasourceRequest();
@@ -299,6 +312,9 @@ public class UserQueryService {
         if (userInfoDTO.getProduct().equals("Yoho")) {
             columnName = "uid";
             product = yohoDw;
+        } else if (userInfoDTO.getProduct().equals("SoMatch")) {
+            columnName = "uid";
+            product = somatchDw;
         }
         DatasourceRequest datasourceRequest = new DatasourceRequest();
         JdbcProvider jdbcProvider = (JdbcProvider) ProviderFactory.getProvider(DatasourceTypes.impala.getType());
@@ -443,6 +459,9 @@ public class UserQueryService {
         if (userInfoDTO.getProduct().equals("Yoho")) {
             columnName = "uid";
             product = yohoDw;
+        } else if (userInfoDTO.getProduct().equals("SoMatch")) {
+            columnName = "uid";
+            product = somatchDw;
         }
         DatasourceRequest datasourceRequest = new DatasourceRequest();
         JdbcProvider jdbcProvider = (JdbcProvider) ProviderFactory.getProvider(DatasourceTypes.impala.getType());
@@ -585,11 +604,16 @@ public class UserQueryService {
 
     public List<JSONObject> getUserList(UserInfoDTO userInfoDTO) throws Exception {
         List<JSONObject> users = new ArrayList<>();
+        String tableName = "al_north_star_user_attr";
         String productHr = micoDw;
         String product = micoAl;
         if (userInfoDTO.getProduct().equals("Yoho")) {
             product = yohoAl;
             productHr = yohoDw;
+        } else if (userInfoDTO.getProduct().equals("SoMatch")) {
+            product = somatchDw;
+            productHr = somatchDw;
+            tableName = "ads_user_attr";
         }
         DatasourceRequest datasourceRequest = new DatasourceRequest();
         ImpalaQueryProvider qp = (ImpalaQueryProvider) ProviderFactory.getQueryProvider(DatasourceTypes.impala.getType());
@@ -602,7 +626,7 @@ public class UserQueryService {
             ChartFieldCustomFilterDTO chartFieldCustomFilterDTO = getChartFieldCustomFilterDTO("eq", "logic", userInfoDTO.getUserId().toString());
             chartFieldCustomFilterDTO.setField(DatasetTableField.builder().originName("user_id").deType(DeTypeConstants.DE_INT).deExtractType(DeTypeConstants.DE_INT).build());
             requestList.add(chartFieldCustomFilterDTO);
-            List<JSONObject> userList = getUserList(product, productHr, startTime, qp, "user_id", datasourceRequest, requestList, userInfoDTO.getUserId(), jdbcProvider);
+            List<JSONObject> userList = getUserList(product, productHr, tableName, startTime, qp, "user_id", datasourceRequest, requestList, userInfoDTO.getUserId(), jdbcProvider);
             JSONObject jsonObject = new JSONObject();
             jsonObject.put("id", userInfoDTO.getUserId());
             jsonObject.put("userId", userInfoDTO.getUserId());
@@ -615,7 +639,7 @@ public class UserQueryService {
             chartFieldCustomFilterDTO.setField(DatasetTableField.builder().originName("uid").deType(DeTypeConstants.DE_INT).deExtractType(DeTypeConstants.DE_INT).build());
             requestList.add(chartFieldCustomFilterDTO);
             List<JSONObject> userList = null;
-            userList = getUserList(product, productHr, startTime, qp, "uid", datasourceRequest, requestList, userInfoDTO.getUid(), jdbcProvider);
+            userList = getUserList(product, productHr, tableName, startTime, qp, "uid", datasourceRequest, requestList, userInfoDTO.getUid(), jdbcProvider);
             JSONObject jsonObject = new JSONObject();
             jsonObject.put("id", userInfoDTO.getUid());
             jsonObject.put("userId", userInfoDTO.getUid());
@@ -660,16 +684,16 @@ public class UserQueryService {
         return users;
     }
 
-    public List<JSONObject> getUserList(String product, String productHr, ChartFieldCustomFilterDTO startTime, ImpalaQueryProvider qp, String columnName,
+    public List<JSONObject> getUserList(String product, String productHr, String tableName, ChartFieldCustomFilterDTO startTime, ImpalaQueryProvider qp, String columnName,
                                         DatasourceRequest datasourceRequest, List<ChartFieldCustomFilterDTO> requestList, Long userId, JdbcProvider jdbcProvider) throws Exception {
         List<JSONObject> users = new ArrayList<>();
         List<Datasource> dw = datasourceService.selectByTypeAndName(DatasourceTypes.impala.getType(), product);
         if (CollectionUtils.isNotEmpty(dw)) {
             String querySql = "select " +
                     "*" +
-                    " from " + product + ".al_north_star_user_attr where dt='" + DateUtils.getDateString(System.currentTimeMillis() - 1000 * 60 * 60 * 24, "yyyyMMdd") + "' and " + columnName + "=" + userId + " limit 1";
+                    " from " + product + "." + tableName + " where dt='" + DateUtils.getDateString(System.currentTimeMillis() - 1000 * 60 * 60 * 24, "yyyyMMdd") + "' and " + columnName + "=" + userId + " limit 1";
             datasourceRequest.setDatasource(dw.get(0));
-            datasourceRequest.setTable(product + ".al_north_star_user_attr");
+            datasourceRequest.setTable(product + "." + tableName);
             datasourceRequest.setQuery(querySql);
             List<JSONObject> jsonData = jdbcProvider.getJsonData(datasourceRequest);
             if (CollectionUtils.isNotEmpty(jsonData)) {
@@ -688,9 +712,9 @@ public class UserQueryService {
                     dw = datasourceService.selectByTypeAndName(DatasourceTypes.impala.getType(), product);
                     querySql = "select " +
                             "*" +
-                            " from " + product + ".al_north_star_user_attr where dt='" + DateUtils.getDateString(System.currentTimeMillis() - 1000 * 60 * 60 * 24, "yyyyMMdd") + "' and " + columnName + "=" + userId + " limit 1";
+                            " from " + product + "." + tableName +" where dt='" + DateUtils.getDateString(System.currentTimeMillis() - 1000 * 60 * 60 * 24, "yyyyMMdd") + "' and " + columnName + "=" + userId + " limit 1";
                     datasourceRequest.setDatasource(dw.get(0));
-                    datasourceRequest.setTable(product + ".al_north_star_user_attr");
+                    datasourceRequest.setTable(product + "." + tableName);
                     datasourceRequest.setQuery(querySql);
                     jsonData = jdbcProvider.getJsonData(datasourceRequest);
                     if (CollectionUtils.isNotEmpty(jsonData)) {

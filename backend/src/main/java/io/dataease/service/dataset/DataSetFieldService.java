@@ -2,6 +2,7 @@ package io.dataease.service.dataset;
 
 
 import io.dataease.dto.dataset.DeSortDTO;
+import io.dataease.plugins.common.base.domain.DatasetTableField;
 
 import java.util.List;
 
@@ -14,4 +15,6 @@ public interface DataSetFieldService {
     List<Object> fieldValues(List<String> fieldIds, DeSortDTO sortDTO, Long userId, Boolean userPermissions, Boolean needMapping, Boolean rowAndColumnMgm) throws Exception;
 
     List<Object> chineseSort(List<Object> list, DeSortDTO sortDTO) throws Exception;
+
+    DatasetTableField getDataSetField(String fieldId);
 }
