@@ -199,11 +199,11 @@ public class AlarmScheduleJob implements Job {
                                 BigDecimal o = (BigDecimal) hashMap.get(index.getDataeaseName());
                                 if (o.compareTo(value) > 0) {
                                     FolderItem folderItem = new FolderItem();
-                                    folderItem.setName(hashMap.get(chartFieldCustomFilterDTO.getDataeaseName()).toString() + ":指标在" + StringUtils.join(indexNameList, ",").replaceAll("\\s+", "_") + "下,值为:" + o + "(高于设定的值" + value + ")");
+                                    folderItem.setName(hashMap.get(chartFieldCustomFilterDTO.getDataeaseName()).toString() + ":指标在" + StringUtils.join(indexNameList, ",").replaceAll("\\s+", "_") + "下,值为:" + o + "（高于设定的值" + value + "）");
                                     folderItems.add(folderItem);
-                                    boolean b = sendAlarm(send, panel, view, hashMap.get(chartFieldCustomFilterDTO.getDataeaseName()).toString() + ":指标在" + StringUtils.join(indexNameList, ",").replaceAll("\\s+", "_") + "下,值为:" + o + "(高于设定的值" + value + ")");
+                                    boolean b = sendAlarm(send, panel, view, hashMap.get(chartFieldCustomFilterDTO.getDataeaseName()).toString() + ":指标在" + StringUtils.join(indexNameList, ",").replaceAll("\\s+", "_") + "下,值为:" + o + "（高于设定的值" + value + "）");
                                     if (!b) {
-                                        msg.add(hashMap.get(chartFieldCustomFilterDTO.getDataeaseName()).toString() + ":指标在" + StringUtils.join(indexNameList, ",").replaceAll("\\s+", "_") + "下,值为:" + o + "(高于设定的值" + value + ")");
+                                        msg.add(hashMap.get(chartFieldCustomFilterDTO.getDataeaseName()).toString() + ":指标在" + StringUtils.join(indexNameList, ",").replaceAll("\\s+", "_") + "下,值为:" + o + "（高于设定的值" + value + "）");
                                     }
                                 }
                             }
@@ -234,11 +234,11 @@ public class AlarmScheduleJob implements Job {
                                     BigDecimal decimal = o.add(avg.multiply(new BigDecimal(-1))).divide(avg, 8, RoundingMode.HALF_UP);
                                     if (decimal.compareTo(value) > 0) {
                                         FolderItem folderItem = new FolderItem();
-                                        folderItem.setName(hashMap.get(chartFieldCustomFilterDTO.getDataeaseName()).toString() + ":指标在" + StringUtils.join(indexNameList, ",").replaceAll("\\s+", "_") + "下环比" + numDay + "日均值为:" + decimal + "(高于设定的值" + value + ")");
+                                        folderItem.setName(hashMap.get(chartFieldCustomFilterDTO.getDataeaseName()).toString() + ":指标在" + StringUtils.join(indexNameList, ",").replaceAll("\\s+", "_") + "下环比" + numDay + "日均值为:" + decimal + "（高于设定的值" + value + "）");
                                         folderItems.add(folderItem);
-                                        boolean b = sendAlarm(send, panel, view, hashMap.get(chartFieldCustomFilterDTO.getDataeaseName()).toString() + ":指标在" + StringUtils.join(indexNameList, ",").replaceAll("\\s+", "_") + "下环比" + numDay + "日均值为:" + decimal + "(高于设定的值" + value + ")");
+                                        boolean b = sendAlarm(send, panel, view, hashMap.get(chartFieldCustomFilterDTO.getDataeaseName()).toString() + ":指标在" + StringUtils.join(indexNameList, ",").replaceAll("\\s+", "_") + "下环比" + numDay + "日均值为:" + decimal + "（高于设定的值" + value + "）");
                                         if (!b) {
-                                            msg.add(hashMap.get(chartFieldCustomFilterDTO.getDataeaseName()).toString() + ":指标在" + StringUtils.join(indexNameList, ",").replaceAll("\\s+", "_") + "下环比" + numDay + "日均值为:" + decimal + "(高于设定的值" + value + ")");
+                                            msg.add(hashMap.get(chartFieldCustomFilterDTO.getDataeaseName()).toString() + ":指标在" + StringUtils.join(indexNameList, ",").replaceAll("\\s+", "_") + "下环比" + numDay + "日均值为:" + decimal + "（高于设定的值" + value + "）");
                                         }
                                     }
                                 }
@@ -253,11 +253,11 @@ public class AlarmScheduleJob implements Job {
                                     BigDecimal decimal = o.add(avg.multiply(new BigDecimal(-1))).divide(avg, 8, RoundingMode.HALF_UP);
                                     if (decimal.compareTo(value) > 0) {
                                         FolderItem folderItem = new FolderItem();
-                                        folderItem.setName(hashMap.get(chartFieldCustomFilterDTO.getDataeaseName()).toString() + ":指标环比" + numDay + "日均值为:" + decimal + "(高于设定的值" + value + ")");
+                                        folderItem.setName(hashMap.get(chartFieldCustomFilterDTO.getDataeaseName()).toString() + ":指标环比" + numDay + "日均值为:" + decimal + "（高于设定的值" + value + "）");
                                         folderItems.add(folderItem);
-                                        boolean b = sendAlarm(send, panel, view, hashMap.get(chartFieldCustomFilterDTO.getDataeaseName()).toString() + ":指标环比" + numDay + "日均值为:" + decimal + "(高于设定的值" + value + ")");
+                                        boolean b = sendAlarm(send, panel, view, hashMap.get(chartFieldCustomFilterDTO.getDataeaseName()).toString() + ":指标环比" + numDay + "日均值为:" + decimal + "（高于设定的值" + value + "）");
                                         if (!b) {
-                                            msg.add(hashMap.get(chartFieldCustomFilterDTO.getDataeaseName()).toString() + ":指标环比" + numDay + "日均值为:" + decimal + "(高于设定的值" + value + ")");
+                                            msg.add(hashMap.get(chartFieldCustomFilterDTO.getDataeaseName()).toString() + ":指标环比" + numDay + "日均值为:" + decimal + "（高于设定的值" + value + "）");
                                         }
                                     }
                                 }
@@ -284,11 +284,11 @@ public class AlarmScheduleJob implements Job {
                                     BigDecimal avg = o.divide(bigDecimal, 8, RoundingMode.HALF_UP);
                                     if (avg.compareTo(value) > 0) {
                                         FolderItem folderItem = new FolderItem();
-                                        folderItem.setName(hashMap.get(chartFieldCustomFilterDTO.getDataeaseName()).toString() + ":指标在" + StringUtils.join(indexNameList, ",").replaceAll("\\s+", "_") + "下,上月同比值为:" + avg + "(高于设定的值" + value + ")");
+                                        folderItem.setName(hashMap.get(chartFieldCustomFilterDTO.getDataeaseName()).toString() + ":指标在" + StringUtils.join(indexNameList, ",").replaceAll("\\s+", "_") + "下,上月同比值为:" + avg + "（高于设定的值" + value + "）");
                                         folderItems.add(folderItem);
-                                        boolean b = sendAlarm(send, panel, view, hashMap.get(chartFieldCustomFilterDTO.getDataeaseName()).toString() + ":指标在" + StringUtils.join(indexNameList, ",").replaceAll("\\s+", "_") + "下,上月同比值为:" + avg + "(高于设定的值" + value + ")");
+                                        boolean b = sendAlarm(send, panel, view, hashMap.get(chartFieldCustomFilterDTO.getDataeaseName()).toString() + ":指标在" + StringUtils.join(indexNameList, ",").replaceAll("\\s+", "_") + "下,上月同比值为:" + avg + "（高于设定的值" + value + "）");
                                         if (!b) {
-                                            msg.add(hashMap.get(chartFieldCustomFilterDTO.getDataeaseName()).toString() + ":指标在" + StringUtils.join(indexNameList, ",").replaceAll("\\s+", "_") + "下,上月同比值为:" + avg + "(高于设定的值" + value + ")");
+                                            msg.add(hashMap.get(chartFieldCustomFilterDTO.getDataeaseName()).toString() + ":指标在" + StringUtils.join(indexNameList, ",").replaceAll("\\s+", "_") + "下,上月同比值为:" + avg + "（高于设定的值" + value + "）");
                                         }
                                     }
                                 }
@@ -302,11 +302,11 @@ public class AlarmScheduleJob implements Job {
                                     BigDecimal avg = o.divide(bigDecimal, 8, RoundingMode.HALF_UP);
                                     if (avg.compareTo(value) > 0) {
                                         FolderItem folderItem = new FolderItem();
-                                        folderItem.setName(hashMap.get(chartFieldCustomFilterDTO.getDataeaseName()).toString() + ":指标,上月同比值为:" + avg + "(高于设定的值" + value + ")");
+                                        folderItem.setName(hashMap.get(chartFieldCustomFilterDTO.getDataeaseName()).toString() + ":指标,上月同比值为:" + avg + "（高于设定的值" + value + "）");
                                         folderItems.add(folderItem);
-                                        boolean b = sendAlarm(send, panel, view, hashMap.get(chartFieldCustomFilterDTO.getDataeaseName()).toString() + ":指标,上月同比值为:" + avg + "(高于设定的值" + value + ")");
+                                        boolean b = sendAlarm(send, panel, view, hashMap.get(chartFieldCustomFilterDTO.getDataeaseName()).toString() + ":指标,上月同比值为:" + avg + "（高于设定的值" + value + "）");
                                         if (!b) {
-                                            msg.add(hashMap.get(chartFieldCustomFilterDTO.getDataeaseName()).toString() + ":指标,上月同比值为:" + avg + "(高于设定的值" + value + ")");
+                                            msg.add(hashMap.get(chartFieldCustomFilterDTO.getDataeaseName()).toString() + ":指标,上月同比值为:" + avg + "（高于设定的值" + value + "）");
                                         }
                                     }
                                 }
@@ -325,11 +325,11 @@ public class AlarmScheduleJob implements Job {
                                 BigDecimal o = (BigDecimal) hashMap.get(index.getDataeaseName());
                                 if (o.compareTo(value) < 0) {
                                     FolderItem folderItem = new FolderItem();
-                                    folderItem.setName(hashMap.get(chartFieldCustomFilterDTO.getDataeaseName()).toString() + ":指标在" + StringUtils.join(indexNameList, ",").replaceAll("\\s+", "_") + "下,值为:" + o + "(低于设定的值" + value + ")");
+                                    folderItem.setName(hashMap.get(chartFieldCustomFilterDTO.getDataeaseName()).toString() + ":指标在" + StringUtils.join(indexNameList, ",").replaceAll("\\s+", "_") + "下,值为:" + o + "（低于设定的值" + value + "）");
                                     folderItems.add(folderItem);
-                                    boolean b = sendAlarm(send, panel, view, hashMap.get(chartFieldCustomFilterDTO.getDataeaseName()).toString() + ":指标在" + StringUtils.join(indexNameList, ",").replaceAll("\\s+", "_") + "下,值为:" + o + "(低于设定的值" + value + ")");
+                                    boolean b = sendAlarm(send, panel, view, hashMap.get(chartFieldCustomFilterDTO.getDataeaseName()).toString() + ":指标在" + StringUtils.join(indexNameList, ",").replaceAll("\\s+", "_") + "下,值为:" + o + "（低于设定的值" + value + "）");
                                     if (!b) {
-                                        msg.add(hashMap.get(chartFieldCustomFilterDTO.getDataeaseName()).toString() + ":指标在" + StringUtils.join(indexNameList, ",").replaceAll("\\s+", "_") + "下,值为:" + o + "(低于设定的值" + value + ")");
+                                        msg.add(hashMap.get(chartFieldCustomFilterDTO.getDataeaseName()).toString() + ":指标在" + StringUtils.join(indexNameList, ",").replaceAll("\\s+", "_") + "下,值为:" + o + "（低于设定的值" + value + "）");
                                     }
                                 }
                             }
@@ -360,11 +360,11 @@ public class AlarmScheduleJob implements Job {
                                     BigDecimal decimal = o.add(avg.multiply(new BigDecimal(-1))).divide(avg, 8, RoundingMode.HALF_UP);
                                     if (decimal.compareTo(value) < 0) {
                                         FolderItem folderItem = new FolderItem();
-                                        folderItem.setName(hashMap.get(chartFieldCustomFilterDTO.getDataeaseName()).toString() + ":指标在" + StringUtils.join(indexNameList, ",").replaceAll("\\s+", "_") + "下环比" + numDay + "日均值为:" + decimal + "(低于设定的值" + value + ")");
+                                        folderItem.setName(hashMap.get(chartFieldCustomFilterDTO.getDataeaseName()).toString() + ":指标在" + StringUtils.join(indexNameList, ",").replaceAll("\\s+", "_") + "下环比" + numDay + "日均值为:" + decimal + "（低于设定的值" + value + "）");
                                         folderItems.add(folderItem);
-                                        boolean b = sendAlarm(send, panel, view, hashMap.get(chartFieldCustomFilterDTO.getDataeaseName()).toString() + ":指标在" + StringUtils.join(indexNameList, ",").replaceAll("\\s+", "_") + "下环比" + numDay + "日均值为:" + decimal + "(低于设定的值" + value + ")");
+                                        boolean b = sendAlarm(send, panel, view, hashMap.get(chartFieldCustomFilterDTO.getDataeaseName()).toString() + ":指标在" + StringUtils.join(indexNameList, ",").replaceAll("\\s+", "_") + "下环比" + numDay + "日均值为:" + decimal + "（低于设定的值" + value + "）");
                                         if (!b) {
-                                            msg.add(hashMap.get(chartFieldCustomFilterDTO.getDataeaseName()).toString() + ":指标在" + StringUtils.join(indexNameList, ",").replaceAll("\\s+", "_") + "下环比" + numDay + "日均值为:" + decimal + "(低于设定的值" + value + ")");
+                                            msg.add(hashMap.get(chartFieldCustomFilterDTO.getDataeaseName()).toString() + ":指标在" + StringUtils.join(indexNameList, ",").replaceAll("\\s+", "_") + "下环比" + numDay + "日均值为:" + decimal + "（低于设定的值" + value + "）");
                                         }
                                     }
                                 }
@@ -379,11 +379,11 @@ public class AlarmScheduleJob implements Job {
                                     BigDecimal decimal = o.add(avg.multiply(new BigDecimal(-1))).divide(avg, 8, RoundingMode.HALF_UP);
                                     if (decimal.compareTo(value) < 0) {
                                         FolderItem folderItem = new FolderItem();
-                                        folderItem.setName(hashMap.get(chartFieldCustomFilterDTO.getDataeaseName()).toString() + ":指标环比" + numDay + "日均值为:" + decimal + "(低于设定的值" + value + ")");
+                                        folderItem.setName(hashMap.get(chartFieldCustomFilterDTO.getDataeaseName()).toString() + ":指标环比" + numDay + "日均值为:" + decimal + "（低于设定的值" + value + "）");
                                         folderItems.add(folderItem);
-                                        boolean b = sendAlarm(send, panel, view, hashMap.get(chartFieldCustomFilterDTO.getDataeaseName()).toString() + ":指标环比" + numDay + "日均值为:" + decimal + "(低于设定的值" + value + ")");
+                                        boolean b = sendAlarm(send, panel, view, hashMap.get(chartFieldCustomFilterDTO.getDataeaseName()).toString() + ":指标环比" + numDay + "日均值为:" + decimal + "（低于设定的值" + value + "）");
                                         if (!b) {
-                                            msg.add(hashMap.get(chartFieldCustomFilterDTO.getDataeaseName()).toString() + ":指标环比" + numDay + "日均值为:" + decimal + "(低于设定的值" + value + ")");
+                                            msg.add(hashMap.get(chartFieldCustomFilterDTO.getDataeaseName()).toString() + ":指标环比" + numDay + "日均值为:" + decimal + "（低于设定的值" + value + "）");
                                         }
                                     }
                                 }
@@ -410,11 +410,11 @@ public class AlarmScheduleJob implements Job {
                                     BigDecimal avg = o.divide(bigDecimal, 8, RoundingMode.HALF_UP);
                                     if (avg.compareTo(value) < 0) {
                                         FolderItem folderItem = new FolderItem();
-                                        folderItem.setName(hashMap.get(chartFieldCustomFilterDTO.getDataeaseName()).toString() + ":指标在" + StringUtils.join(indexNameList, ",").replaceAll("\\s+", "_") + "下,上月同比值为:" + avg + "(低于设定的值" + value + ")");
+                                        folderItem.setName(hashMap.get(chartFieldCustomFilterDTO.getDataeaseName()).toString() + ":指标在" + StringUtils.join(indexNameList, ",").replaceAll("\\s+", "_") + "下,上月同比值为:" + avg + "（低于设定的值" + value + "）");
                                         folderItems.add(folderItem);
-                                        boolean b = sendAlarm(send, panel, view, hashMap.get(chartFieldCustomFilterDTO.getDataeaseName()).toString() + ":指标在" + StringUtils.join(indexNameList, ",").replaceAll("\\s+", "_") + "下,上月同比值为:" + avg + "(低于设定的值" + value + ")");
+                                        boolean b = sendAlarm(send, panel, view, hashMap.get(chartFieldCustomFilterDTO.getDataeaseName()).toString() + ":指标在" + StringUtils.join(indexNameList, ",").replaceAll("\\s+", "_") + "下,上月同比值为:" + avg + "（低于设定的值" + value + "）");
                                         if (!b) {
-                                            msg.add(hashMap.get(chartFieldCustomFilterDTO.getDataeaseName()).toString() + ":指标在" + StringUtils.join(indexNameList, ",").replaceAll("\\s+", "_") + "下,上月同比值为:" + avg + "(低于设定的值" + value + ")");
+                                            msg.add(hashMap.get(chartFieldCustomFilterDTO.getDataeaseName()).toString() + ":指标在" + StringUtils.join(indexNameList, ",").replaceAll("\\s+", "_") + "下,上月同比值为:" + avg + "（低于设定的值" + value + "）");
                                         }
                                     }
                                 }
@@ -428,11 +428,11 @@ public class AlarmScheduleJob implements Job {
                                     BigDecimal avg = o.divide(bigDecimal, 8, RoundingMode.HALF_UP);
                                     if (avg.compareTo(value) < 0) {
                                         FolderItem folderItem = new FolderItem();
-                                        folderItem.setName(hashMap.get(chartFieldCustomFilterDTO.getDataeaseName()).toString() + ":指标,上月同比值为:" + avg + "(低于设定的值" + value + ")");
+                                        folderItem.setName(hashMap.get(chartFieldCustomFilterDTO.getDataeaseName()).toString() + ":指标,上月同比值为:" + avg + "（低于设定的值" + value + "）");
                                         folderItems.add(folderItem);
-                                        boolean b = sendAlarm(send, panel, view, hashMap.get(chartFieldCustomFilterDTO.getDataeaseName()).toString() + ":指标,上月同比值为:" + avg + "(低于设定的值" + value + ")");
+                                        boolean b = sendAlarm(send, panel, view, hashMap.get(chartFieldCustomFilterDTO.getDataeaseName()).toString() + ":指标,上月同比值为:" + avg + "（低于设定的值" + value + "）");
                                         if (!b) {
-                                            msg.add(hashMap.get(chartFieldCustomFilterDTO.getDataeaseName()).toString() + ":指标,上月同比值为:" + avg + "(低于设定的值" + value + ")");
+                                            msg.add(hashMap.get(chartFieldCustomFilterDTO.getDataeaseName()).toString() + ":指标,上月同比值为:" + avg + "（低于设定的值" + value + "）");
                                         }
                                     }
                                 }
