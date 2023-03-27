@@ -339,34 +339,34 @@ public class UserQueryService {
                 case "server":
                     arrayList.add("select * from " + product + ".dwd_server_event_detail where " + columnName + "=" + userInfoDTO.getUserId()
                             + " and dt>='" + DateUtils.getDateString(userInfoDTO.getStartTime(), "yyyyMMdd") + "' and dt<='" +
-                            DateUtils.getDateString(userInfoDTO.getEndTime(), "yyyyMMdd") + "' and event_name in (" + String.join(",", entry.getValue()) + ") order by `timestamp`" + userInfoDTO.getSort());
+                            DateUtils.getDateString(userInfoDTO.getEndTime(), "yyyyMMdd") + "' and event_name in (" + String.join(",", entry.getValue()) + ") limit " + userInfoDTO.getPageNo() * 50);
                     if (DateUtils.getDateString(userInfoDTO.getEndTime(), "yyyyMMdd").equals(DateUtils.getDateString(System.currentTimeMillis(), "yyyyMMdd"))) {
                         arrayList.add("select * from " + product + ".tl_server_event_hr where " + columnName + "=" + userInfoDTO.getUserId()
-                                + " and dt='" + DateUtils.getDateString(userInfoDTO.getEndTime(), "yyyyMMdd") + "' and event_name in (" + String.join(",", entry.getValue()) + ") order by `timestamp`" + userInfoDTO.getSort());
+                                + " and dt='" + DateUtils.getDateString(userInfoDTO.getEndTime(), "yyyyMMdd") + "' and event_name in (" + String.join(",", entry.getValue()) + ") limit " + userInfoDTO.getPageNo() * 50);
                     }
                     break;
                 case "client":
                     arrayList.add("select * from " + product + ".dwd_client_event_detail where " + columnName + "=" + userInfoDTO.getUserId()
                             + " and dt>='" + DateUtils.getDateString(userInfoDTO.getStartTime(), "yyyyMMdd") + "' and dt<='" +
-                            DateUtils.getDateString(userInfoDTO.getEndTime(), "yyyyMMdd") + "' and event_name in (" + String.join(",", entry.getValue()) + ") order by `timestamp`" + userInfoDTO.getSort());
+                            DateUtils.getDateString(userInfoDTO.getEndTime(), "yyyyMMdd") + "' and event_name in (" + String.join(",", entry.getValue()) + ") limit " + userInfoDTO.getPageNo() * 50);
                     if (DateUtils.getDateString(userInfoDTO.getEndTime(), "yyyyMMdd").equals(DateUtils.getDateString(System.currentTimeMillis(), "yyyyMMdd"))) {
                         arrayList.add("select * from " + product + ".tl_client_event_hr where " + columnName + "=" + userInfoDTO.getUserId()
-                                + " and dt='" + DateUtils.getDateString(userInfoDTO.getEndTime(), "yyyyMMdd") + "' and event_name in (" + String.join(",", entry.getValue()) + ") order by `timestamp`" + userInfoDTO.getSort());
+                                + " and dt='" + DateUtils.getDateString(userInfoDTO.getEndTime(), "yyyyMMdd") + "' and event_name in (" + String.join(",", entry.getValue()) + ") limit " + userInfoDTO.getPageNo() * 50);
                     }
                     break;
                 case "h5":
                     arrayList.add("select * from " + product + ".dwd_h5_event_detail where " + columnName + "=" + userInfoDTO.getUserId()
                             + " and dt>='" + DateUtils.getDateString(userInfoDTO.getStartTime(), "yyyyMMdd") + "' and dt<='" +
-                            DateUtils.getDateString(userInfoDTO.getEndTime(), "yyyyMMdd") + "' and event_name in (" + String.join(",", entry.getValue()) + ") order by `timestamp`" + userInfoDTO.getSort());
+                            DateUtils.getDateString(userInfoDTO.getEndTime(), "yyyyMMdd") + "' and event_name in (" + String.join(",", entry.getValue()) + ") limit " + userInfoDTO.getPageNo() * 50);
                     if (DateUtils.getDateString(userInfoDTO.getEndTime(), "yyyyMMdd").equals(DateUtils.getDateString(System.currentTimeMillis(), "yyyyMMdd"))) {
                         arrayList.add("select * from " + product + ".tl_h5_event_hr where " + columnName + "=" + userInfoDTO.getUserId()
-                                + " and dt='" + DateUtils.getDateString(userInfoDTO.getEndTime(), "yyyyMMdd") + "' and event_name in (" + String.join(",", entry.getValue()) + ") order by `timestamp`" + userInfoDTO.getSort());
+                                + " and dt='" + DateUtils.getDateString(userInfoDTO.getEndTime(), "yyyyMMdd") + "' and event_name in (" + String.join(",", entry.getValue()) + ") limit " + userInfoDTO.getPageNo() * 50);
                     }
                     break;
                 case "technology":
                     arrayList.add("select * from " + product + ".dwd_apm_client_event_detail where " + columnName + "=" + userInfoDTO.getUserId()
                             + " and dt>='" + DateUtils.getDateString(userInfoDTO.getStartTime(), "yyyyMMdd") + "' and dt<='" +
-                            DateUtils.getDateString(userInfoDTO.getEndTime(), "yyyyMMdd") + "' and event_name in (" + String.join(",", entry.getValue()) + ") order by `timestamp`" + userInfoDTO.getSort());
+                            DateUtils.getDateString(userInfoDTO.getEndTime(), "yyyyMMdd") + "' and event_name in (" + String.join(",", entry.getValue()) + ") limit " + userInfoDTO.getPageNo() * 50);
                     break;
             }
         }
@@ -374,7 +374,7 @@ public class UserQueryService {
         //sql = "select * from (" + sql + ") t order by `timestamp` " + userInfoDTO.getSort();
         if (arrayList.size() > 0) {
             for (String s : arrayList) {
-                String sql = "select * from (" + s + ") t order by `timestamp` " + userInfoDTO.getSort();
+                String sql = "select * from (" + s + ") t ";
                 datasourceRequest.setDatasource(dw.get(0));
                 datasourceRequest.setQuery(sql);
                 List<JSONObject> jsonData = jdbcProvider.getJsonRowData(datasourceRequest);
@@ -448,6 +448,13 @@ public class UserQueryService {
                     }
                 }
             });
+        }
+        ArrayList<JSONObject> results = new ArrayList<>();
+        if (eventDetailList.size() >= userInfoDTO.getPageNo() * 50) {
+            for (int i = 0; i <= userInfoDTO.getPageNo() * 50 - 1; i++) {
+                results.add(eventDetailList.get(i));
+            }
+            return results;
         }
         return eventDetailList;
     }
@@ -487,36 +494,36 @@ public class UserQueryService {
                     if (!userInfoDTO.getDate().equals(DateUtils.getDateString(System.currentTimeMillis(), "yyyyMMdd"))) {
                         arrayList.add("select * from " + product + ".dwd_server_event_detail where " + columnName + "=" + userInfoDTO.getUserId()
                                 + " and dt>='" + userInfoDTO.getDate() + "' and dt<='" +
-                                userInfoDTO.getDate() + "' and event_name in (" + String.join(",", entry.getValue()) + ") order by `timestamp`" + userInfoDTO.getSort());
+                                userInfoDTO.getDate() + "' and event_name in (" + String.join(",", entry.getValue()) + ") limit " + userInfoDTO.getPageNo() * 50);
                     } else {
                         arrayList.add("select * from " + product + ".tl_server_event_hr where " + columnName + "=" + userInfoDTO.getUserId()
-                                + " and dt='" + userInfoDTO.getDate() + "' and event_name in (" + String.join(",", entry.getValue()) + ") order by `timestamp`" + userInfoDTO.getSort());
+                                + " and dt='" + userInfoDTO.getDate() + "' and event_name in (" + String.join(",", entry.getValue()) + ") limit " + userInfoDTO.getPageNo() * 50);
                     }
                     break;
                 case "client":
                     if (!userInfoDTO.getDate().equals(DateUtils.getDateString(System.currentTimeMillis(), "yyyyMMdd"))) {
                         arrayList.add("select * from " + product + ".dwd_client_event_detail where " + columnName + "=" + userInfoDTO.getUserId()
                                 + " and dt>='" + userInfoDTO.getDate() + "' and dt<='" +
-                                userInfoDTO.getDate() + "' and event_name in (" + String.join(",", entry.getValue()) + ") order by `timestamp`" + userInfoDTO.getSort());
+                                userInfoDTO.getDate() + "' and event_name in (" + String.join(",", entry.getValue()) + ") limit " + userInfoDTO.getPageNo() * 50);
                     } else {
                         arrayList.add("select * from " + product + ".tl_client_event_hr where " + columnName + "=" + userInfoDTO.getUserId()
-                                + " and dt='" + userInfoDTO.getDate() + "' and event_name in (" + String.join(",", entry.getValue()) + ") order by `timestamp`" + userInfoDTO.getSort());
+                                + " and dt='" + userInfoDTO.getDate() + "' and event_name in (" + String.join(",", entry.getValue()) + ") limit " + userInfoDTO.getPageNo() * 50);
                     }
                     break;
                 case "h5":
                     if (!userInfoDTO.getDate().equals(DateUtils.getDateString(System.currentTimeMillis(), "yyyyMMdd"))) {
                         arrayList.add("select * ct from " + product + ".dwd_h5_event_detail where " + columnName + "=" + userInfoDTO.getUserId()
                                 + " and dt>='" + userInfoDTO.getDate() + "' and dt<='" +
-                                userInfoDTO.getDate() + "' and event_name in (" + String.join(",", entry.getValue()) + ") order by `timestamp`" + userInfoDTO.getSort());
+                                userInfoDTO.getDate() + "' and event_name in (" + String.join(",", entry.getValue()) + ") limit " + userInfoDTO.getPageNo() * 50);
                     } else {
                         arrayList.add("select * from " + product + ".tl_h5_event_hr where " + columnName + "=" + userInfoDTO.getUserId()
-                                + " and dt='" + userInfoDTO.getDate() + "' and event_name in (" + String.join(",", entry.getValue()) + ") order by `timestamp`" + userInfoDTO.getSort());
+                                + " and dt='" + userInfoDTO.getDate() + "' and event_name in (" + String.join(",", entry.getValue()) + ") limit " + userInfoDTO.getPageNo() * 50);
                     }
                     break;
                 case "technology":
                     arrayList.add("select * from " + product + ".dwd_apm_client_event_detail where " + columnName + "=" + userInfoDTO.getUserId()
                             + " and dt>='" + userInfoDTO.getDate() + "' and dt<='" +
-                            userInfoDTO.getDate() + "' and event_name in (" + String.join(",", entry.getValue()) + ") order by `timestamp`" + userInfoDTO.getSort());
+                            userInfoDTO.getDate() + "' and event_name in (" + String.join(",", entry.getValue()) + ") limit " + userInfoDTO.getPageNo() * 50);
                     break;
             }
         }
@@ -524,7 +531,7 @@ public class UserQueryService {
 //        sql = "select * from (" + sql + ") t order by `timestamp` " + userInfoDTO.getSort();
         if (arrayList.size() > 0) {
             for (String s : arrayList) {
-                String sql = "select * from (" + s + ") t order by `timestamp` " + userInfoDTO.getSort();
+                String sql = "select * from (" + s + ") t ";
                 datasourceRequest.setDatasource(dw.get(0));
                 datasourceRequest.setQuery(sql);
                 List<JSONObject> jsonData = jdbcProvider.getJsonRowData(datasourceRequest);
@@ -598,6 +605,13 @@ public class UserQueryService {
                     }
                 }
             });
+        }
+        ArrayList<JSONObject> results = new ArrayList<>();
+        if (eventDetailList.size() >= userInfoDTO.getPageNo() * 50) {
+            for (int i = 0; i <= userInfoDTO.getPageNo() * 50 - 1; i++) {
+                results.add(eventDetailList.get(i));
+            }
+            return results;
         }
         return eventDetailList;
     }
@@ -712,7 +726,7 @@ public class UserQueryService {
                     dw = datasourceService.selectByTypeAndName(DatasourceTypes.impala.getType(), product);
                     querySql = "select " +
                             "*" +
-                            " from " + product + "." + tableName +" where dt='" + DateUtils.getDateString(System.currentTimeMillis() - 1000 * 60 * 60 * 24, "yyyyMMdd") + "' and " + columnName + "=" + userId + " limit 1";
+                            " from " + product + "." + tableName + " where dt='" + DateUtils.getDateString(System.currentTimeMillis() - 1000 * 60 * 60 * 24, "yyyyMMdd") + "' and " + columnName + "=" + userId + " limit 1";
                     datasourceRequest.setDatasource(dw.get(0));
                     datasourceRequest.setTable(product + "." + tableName);
                     datasourceRequest.setQuery(querySql);

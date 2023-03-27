@@ -214,15 +214,6 @@
                     </div>
                   </div>
                   <div
-                    v-show="showTimeline"
-                    style="display: flex;justify-content: center;align-items: center;height: 300px"
-                  >
-                    <el-progress
-                      type="circle"
-                      :percentage="percentageDetail"
-                    />
-                  </div>
-                  <div
                     v-for="(item,index) in timeList"
                     v-show="!showTimeline"
                     :key="index"
@@ -259,14 +250,23 @@
                     </div>
                   </div>
                   <div
-                    v-show="!isTotal && !showTimeline"
+                    v-show="showTimelinePage"
+                    style="display: flex;justify-content: center;align-items: center;height: 300px"
+                  >
+                    <el-progress
+                      type="circle"
+                      :percentage="percentageDetail"
+                    />
+                  </div>
+                  <div
+                    v-show="!isTotal && !showTimelinePage"
                     style="display: flex;align-items: center;justify-content: center;height: 40px;cursor: pointer;"
                     @click="pageTimeLine"
                   >
                     加载更多
                   </div>
                   <div
-                    v-show="isTotal && !showTimeline"
+                    v-show="isTotal && !showTimelinePage"
                     style="display: flex;align-items: center;justify-content: center;height: 40px;"
                   >
                     已加载全部
@@ -390,6 +390,7 @@ export default {
       filterText: '',
       filterDetailText: '',
       userId: null,
+      showTimelinePage: false,
       userListLoading: false,
       isTotal: false,
       showChart: true,
@@ -835,6 +836,7 @@ export default {
       this.isTotal = false
       this.showChart = true
       this.showTimeline = true
+      this.showTimelinePage = true
       this.pageNo = 1
       this.percentage = 15
       this.percentageDetail = 15
@@ -871,6 +873,7 @@ export default {
                 this.pageNo = 1
                 this.eventFlag = false
                 this.showTimeline = true
+                this.showTimelinePage = true
                 this.percentageDetail = 15
                 this.barDetailProcess()
                 const op = this.$refs.treeDetail.getCheckedNodes()
@@ -878,6 +881,7 @@ export default {
                 getUserEventDetailForDate({ userId: this.userId, product: this.product,
                   date: params.name, eventList: op, sort: this.sortOperator, pageNo: this.pageNo }).then(response => {
                   this.showTimeline = false
+                  this.showTimelinePage = false
                   this.timeList = response.data
                 })
               })
@@ -893,6 +897,7 @@ export default {
           getUserEventDetail({ userId: this.userId, product: this.product, startTime: this.dateRange[0].getTime(),
             endTime: this.dateRange[1].getTime(), eventList: op, sort: this.sortOperator, pageNo: this.pageNo }).then(response => {
             this.showTimeline = false
+            this.showTimelinePage = false
             this.timeList = response.data
           })
         } else {
@@ -943,6 +948,7 @@ export default {
     reloadTimeLine(flag) {
       this.eventFlag = false
       this.showTimeline = true
+      this.showTimelinePage = true
       this.percentageDetail = 15
       this.barDetailProcess()
       this.pageNo = 1
@@ -951,19 +957,22 @@ export default {
         getUserEventDetailForDate({ userId: this.userId, product: this.product,
           date: this.currentDate, eventList: op, sort: this.sortOperator, pageNo: this.pageNo }).then(response => {
           this.showTimeline = false
+          this.showTimelinePage = false
           this.timeList = response.data
         })
       } else {
         getUserEventDetail({ userId: this.userId, product: this.product, startTime: this.dateRange[0].getTime(),
           endTime: this.dateRange[1].getTime(), eventList: op, sort: this.sortOperator, pageNo: this.pageNo }).then(response => {
           this.showTimeline = false
+          this.showTimelinePage = false
           this.timeList = response.data
         })
       }
     },
     pageTimeLine() {
       this.eventFlag = false
-      this.showTimeline = true
+      this.showTimelinePage = true
+      // this.showTimeline = true
       this.percentageDetail = 15
       this.barDetailProcess()
       const op = this.$refs.treeDetail.getCheckedNodes()
@@ -972,24 +981,22 @@ export default {
         getUserEventDetailForDate({ userId: this.userId, product: this.product,
           date: this.currentDate, eventList: op, sort: this.sortOperator, pageNo: this.pageNo }).then(response => {
           this.showTimeline = false
+          this.showTimelinePage = false
           if (response.data.length === 0) {
             this.isTotal = true
           } else {
-            response.data.forEach(x => {
-              this.timeList.push(x)
-            })
+            this.timeList = response.data
           }
         })
       } else {
         getUserEventDetail({ userId: this.userId, product: this.product, startTime: this.dateRange[0].getTime(),
           endTime: this.dateRange[1].getTime(), eventList: op, sort: this.sortOperator, pageNo: this.pageNo }).then(response => {
           this.showTimeline = false
+          this.showTimelinePage = false
           if (response.data.length === 0) {
             this.isTotal = true
           } else {
-            response.data.forEach(x => {
-              this.timeList.push(x)
-            })
+            this.timeList = response.data
           }
         })
       }
