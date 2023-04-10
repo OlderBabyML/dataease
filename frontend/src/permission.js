@@ -4,7 +4,7 @@ import store from './store'
 import NProgress from 'nprogress' // progress bar
 import 'nprogress/nprogress.css' // progress bar style
 import {
-  getToken, setToken, setTopBar
+  getToken, setToken
 } from '@/utils/auth' // get token from cookie
 import getPageTitle from '@/utils/get-page-title'
 import {
@@ -18,6 +18,7 @@ import {
   changeFavicon
 } from '@/utils/index'
 import Layout from '@/layout/index'
+import request from '@/utils/request'
 import {
   getSysUI
 } from '@/utils/auth'
@@ -57,13 +58,17 @@ const routeBefore = (callBack) => {
     callBack()
   }
 }
-router.beforeEach(async (to, from, next) => routeBefore(() => {
+router.beforeEach(async(to, from, next) => routeBefore(() => {
   // start progress bar
   NProgress.start()
   const mobileIgnores = ['/delink', '/de-auto-login']
   const mobilePreview = '/preview/'
+  if (typeof to.query.Authorization !== 'undefined') {
+    setToken(to.query.Authorization)
+    request.defaults.headers.common['Authorization'] = to.query.Authorization
+  }
   const hasToken = getToken()
-
+  console.log(hasToken)
   if (isMobile() && !to.path.includes(mobilePreview) && mobileIgnores.indexOf(to.path) === -1) {
     let urlSuffix = '/app.html'
     if (hasToken) {
@@ -79,16 +84,10 @@ router.beforeEach(async (to, from, next) => routeBefore(() => {
   // set page title
   document.title = getPageTitle(to.meta.title)
 
-  if (typeof to.query.Authorization !== 'undefined') {
-    setToken(to.query.Authorization)
-    request.defaults.headers.common['Authorization'] = to.query.Authorization
-  }
-
   if (typeof to.query.topbar !== 'undefined') {
     store.dispatch('app/setTopBar', to.query.topbar)
   }
   // determine whether the user has logged in
-
   if (hasToken) {
     if (to.path === '/login') {
       // if is logged in, redirect to the home page

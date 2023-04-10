@@ -27,7 +27,6 @@ import io.dataease.plugins.xpack.ldap.dto.response.ValidateResult;
 import io.dataease.plugins.xpack.ldap.service.LdapXpackService;
 import io.dataease.plugins.xpack.oidc.service.OidcXpackService;
 import io.dataease.service.sys.SysUserService;
-
 import io.dataease.service.system.SystemParameterService;
 import io.dataease.websocket.entity.WsMessage;
 import io.dataease.websocket.service.WsService;
@@ -39,14 +38,13 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
 
 @RestController
 public class AuthServer implements AuthApi {
@@ -96,7 +94,7 @@ public class AuthServer implements AuthApi {
             DataEaseException.throwException(appendLoginErrorMsg(Translator.get("i18n_id_or_pwd_error"), lockStatus));
         }
         TokenInfo tokenInfo = TokenInfo.builder().userId(user.getUserId()).username(username).build();
-        String token = JWTUtils.sign(tokenInfo, realPwd, false);
+        String token = JWTUtils.sign(tokenInfo, realPwd);
         // 记录token操作时间
         Map<String, Object> result = new HashMap<>();
         result.put("token", token);
@@ -218,7 +216,7 @@ public class AuthServer implements AuthApi {
         ServletUtils.setToken(token);
         TokenInfo tokenInfo = JWTUtils.tokenInfoByToken(token);
         Long userId = tokenInfo.getUserId();
-        JWTUtils.seizeSign(userId, token);
+        //JWTUtils.seizeSign(userId, token);
         DeLogUtils.save(SysLogConstants.OPERATE_TYPE.LOGIN, SysLogConstants.SOURCE_TYPE.USER, userId, null, null, null);
         WsMessage message = new WsMessage(userId, "/web-seize-topic", IPUtils.get());
         wsService.releaseMessage(message);

@@ -222,34 +222,34 @@ public class UserQueryService {
             String key = entry.getKey();
             switch (key) {
                 case "server":
-                    arrayList.add("select dt,event_name,count(*) ct from " + product + ".dwd_server_event_detail where " + columnName + "=" + userInfoDTO.getUserId()
+                    arrayList.add("select dt,event_name,count(*) ct from polaris." + product + "_dwd_server_event_detail where " + columnName + "=" + userInfoDTO.getUserId()
                             + " and dt>='" + DateUtils.getDateString(userInfoDTO.getStartTime(), "yyyyMMdd") + "' and dt<='" +
                             DateUtils.getDateString(userInfoDTO.getEndTime(), "yyyyMMdd") + "' and event_name in (" + String.join(",", entry.getValue()) + ") group by dt,event_name");
                     if (DateUtils.getDateString(userInfoDTO.getEndTime(), "yyyyMMdd").equals(DateUtils.getDateString(System.currentTimeMillis(), "yyyyMMdd"))) {
-                        arrayList.add("select dt,event_name,count(*) ct from " + product + ".tl_server_event_hr where " + columnName + "=" + userInfoDTO.getUserId()
+                        arrayList.add("select dt,event_name,count(*) ct from polaris." + product + "_tl_server_event_hr where " + columnName + "=" + userInfoDTO.getUserId()
                                 + " and dt='" + DateUtils.getDateString(userInfoDTO.getEndTime(), "yyyyMMdd") + "' and event_name in (" + String.join(",", entry.getValue()) + ") group by dt,event_name");
                     }
                     break;
                 case "client":
-                    arrayList.add("select dt,event_name,count(*) ct from " + product + ".dwd_client_event_detail where " + columnName + "=" + userInfoDTO.getUserId()
+                    arrayList.add("select dt,event_name,count(*) ct from polaris." + product + "_dwd_client_event_detail where " + columnName + "=" + userInfoDTO.getUserId()
                             + " and dt>='" + DateUtils.getDateString(userInfoDTO.getStartTime(), "yyyyMMdd") + "' and dt<='" +
                             DateUtils.getDateString(userInfoDTO.getEndTime(), "yyyyMMdd") + "' and event_name in (" + String.join(",", entry.getValue()) + ") group by dt,event_name");
                     if (DateUtils.getDateString(userInfoDTO.getEndTime(), "yyyyMMdd").equals(DateUtils.getDateString(System.currentTimeMillis(), "yyyyMMdd"))) {
-                        arrayList.add("select dt,event_name,count(*) ct from " + product + ".tl_client_event_hr where " + columnName + "=" + userInfoDTO.getUserId()
+                        arrayList.add("select dt,event_name,count(*) ct from polaris." + product + "_tl_client_event_hr where " + columnName + "=" + userInfoDTO.getUserId()
                                 + " and dt='" + DateUtils.getDateString(userInfoDTO.getEndTime(), "yyyyMMdd") + "' and event_name in (" + String.join(",", entry.getValue()) + ") group by dt,event_name");
                     }
                     break;
                 case "h5":
-                    arrayList.add("select dt,event_name,count(*) ct from " + product + ".dwd_h5_event_detail where user_id=" + userInfoDTO.getUserId()
+                    arrayList.add("select dt,event_name,count(*) ct from polaris." + product + "_dwd_h5_event_detail where user_id=" + userInfoDTO.getUserId()
                             + " and dt>='" + DateUtils.getDateString(userInfoDTO.getStartTime(), "yyyyMMdd") + "' and dt<='" +
                             DateUtils.getDateString(userInfoDTO.getEndTime(), "yyyyMMdd") + "' and event_name in (" + String.join(",", entry.getValue()) + ") group by dt,event_name");
                     if (DateUtils.getDateString(userInfoDTO.getEndTime(), "yyyyMMdd").equals(DateUtils.getDateString(System.currentTimeMillis(), "yyyyMMdd"))) {
-                        arrayList.add("select dt,event_name,count(*) ct from " + product + ".tl_h5_event_hr where " + columnName + "=" + userInfoDTO.getUserId()
+                        arrayList.add("select dt,event_name,count(*) ct from polaris." + product + "_tl_h5_event_hr where " + columnName + "=" + userInfoDTO.getUserId()
                                 + " and dt='" + DateUtils.getDateString(userInfoDTO.getEndTime(), "yyyyMMdd") + "' and event_name in (" + String.join(",", entry.getValue()) + ") group by dt,event_name");
                     }
                     break;
                 case "technology":
-                    arrayList.add("select dt,event_name,count(*) ct from " + product + ".dwd_apm_client_event_detail where " + columnName + "=" + userInfoDTO.getUserId()
+                    arrayList.add("select dt,event_name,count(*) ct from polaris." + product + "_dwd_apm_client_event_detail where " + columnName + "=" + userInfoDTO.getUserId()
                             + " and dt>='" + DateUtils.getDateString(userInfoDTO.getStartTime(), "yyyyMMdd") + "' and dt<='" +
                             DateUtils.getDateString(userInfoDTO.getEndTime(), "yyyyMMdd") + "' and event_name in (" + String.join(",", entry.getValue()) + ") group by dt,event_name");
                     break;
@@ -337,34 +337,34 @@ public class UserQueryService {
             String key = entry.getKey();
             switch (key) {
                 case "server":
-                    arrayList.add("select * from " + product + ".dwd_server_event_detail where " + columnName + "=" + userInfoDTO.getUserId()
+                    arrayList.add("select * from polaris." + product + "_dwd_server_event_detail where " + columnName + "=" + userInfoDTO.getUserId()
                             + " and dt>='" + DateUtils.getDateString(userInfoDTO.getStartTime(), "yyyyMMdd") + "' and dt<='" +
                             DateUtils.getDateString(userInfoDTO.getEndTime(), "yyyyMMdd") + "' and event_name in (" + String.join(",", entry.getValue()) + ") limit " + userInfoDTO.getPageNo() * 50);
                     if (DateUtils.getDateString(userInfoDTO.getEndTime(), "yyyyMMdd").equals(DateUtils.getDateString(System.currentTimeMillis(), "yyyyMMdd"))) {
-                        arrayList.add("select * from " + product + ".tl_server_event_hr where " + columnName + "=" + userInfoDTO.getUserId()
+                        arrayList.add("select * from polaris." + product + "_tl_server_event_hr where " + columnName + "=" + userInfoDTO.getUserId()
                                 + " and dt='" + DateUtils.getDateString(userInfoDTO.getEndTime(), "yyyyMMdd") + "' and event_name in (" + String.join(",", entry.getValue()) + ") limit " + userInfoDTO.getPageNo() * 50);
                     }
                     break;
                 case "client":
-                    arrayList.add("select * from " + product + ".dwd_client_event_detail where " + columnName + "=" + userInfoDTO.getUserId()
+                    arrayList.add("select * from polaris." + product + "_dwd_client_event_detail where " + columnName + "=" + userInfoDTO.getUserId()
                             + " and dt>='" + DateUtils.getDateString(userInfoDTO.getStartTime(), "yyyyMMdd") + "' and dt<='" +
                             DateUtils.getDateString(userInfoDTO.getEndTime(), "yyyyMMdd") + "' and event_name in (" + String.join(",", entry.getValue()) + ") limit " + userInfoDTO.getPageNo() * 50);
                     if (DateUtils.getDateString(userInfoDTO.getEndTime(), "yyyyMMdd").equals(DateUtils.getDateString(System.currentTimeMillis(), "yyyyMMdd"))) {
-                        arrayList.add("select * from " + product + ".tl_client_event_hr where " + columnName + "=" + userInfoDTO.getUserId()
+                        arrayList.add("select * from polaris." + product + "_tl_client_event_hr where " + columnName + "=" + userInfoDTO.getUserId()
                                 + " and dt='" + DateUtils.getDateString(userInfoDTO.getEndTime(), "yyyyMMdd") + "' and event_name in (" + String.join(",", entry.getValue()) + ") limit " + userInfoDTO.getPageNo() * 50);
                     }
                     break;
                 case "h5":
-                    arrayList.add("select * from " + product + ".dwd_h5_event_detail where " + columnName + "=" + userInfoDTO.getUserId()
+                    arrayList.add("select * from polaris." + product + "_dwd_h5_event_detail where " + columnName + "=" + userInfoDTO.getUserId()
                             + " and dt>='" + DateUtils.getDateString(userInfoDTO.getStartTime(), "yyyyMMdd") + "' and dt<='" +
                             DateUtils.getDateString(userInfoDTO.getEndTime(), "yyyyMMdd") + "' and event_name in (" + String.join(",", entry.getValue()) + ") limit " + userInfoDTO.getPageNo() * 50);
                     if (DateUtils.getDateString(userInfoDTO.getEndTime(), "yyyyMMdd").equals(DateUtils.getDateString(System.currentTimeMillis(), "yyyyMMdd"))) {
-                        arrayList.add("select * from " + product + ".tl_h5_event_hr where " + columnName + "=" + userInfoDTO.getUserId()
+                        arrayList.add("select * from polaris." + product + "_tl_h5_event_hr where " + columnName + "=" + userInfoDTO.getUserId()
                                 + " and dt='" + DateUtils.getDateString(userInfoDTO.getEndTime(), "yyyyMMdd") + "' and event_name in (" + String.join(",", entry.getValue()) + ") limit " + userInfoDTO.getPageNo() * 50);
                     }
                     break;
                 case "technology":
-                    arrayList.add("select * from " + product + ".dwd_apm_client_event_detail where " + columnName + "=" + userInfoDTO.getUserId()
+                    arrayList.add("select * from polaris." + product + "_dwd_apm_client_event_detail where " + columnName + "=" + userInfoDTO.getUserId()
                             + " and dt>='" + DateUtils.getDateString(userInfoDTO.getStartTime(), "yyyyMMdd") + "' and dt<='" +
                             DateUtils.getDateString(userInfoDTO.getEndTime(), "yyyyMMdd") + "' and event_name in (" + String.join(",", entry.getValue()) + ") limit " + userInfoDTO.getPageNo() * 50);
                     break;
@@ -384,7 +384,7 @@ public class UserQueryService {
                     JSONObject jsonObject = new JSONObject();
                     jsonObject.put("isShow", false);
                     jsonObject.put("name", object.getString("event_name"));
-                    jsonObject.put("timestamp", DateUtils.getDateString(timestamp, "HH:mm:ss:SSS"));
+                    jsonObject.put("timestamp", DateUtils.getDateStringTimeZone(timestamp, "HH:mm:ss:SSS"));
                     jsonObject.put("timestamps", timestamp);
                     ArrayList<JSONObject> dataList = new ArrayList<>();
                     Set<Map.Entry<String, Object>> set = object.entrySet();
@@ -435,6 +435,8 @@ public class UserQueryService {
                         }
                     }
                 });
+
+                jsonObject.put("eventList", events);
             }
             Collections.sort(eventDetailList, new Comparator<JSONObject>() {
                 @Override
@@ -492,36 +494,36 @@ public class UserQueryService {
             switch (key) {
                 case "server":
                     if (!userInfoDTO.getDate().equals(DateUtils.getDateString(System.currentTimeMillis(), "yyyyMMdd"))) {
-                        arrayList.add("select * from " + product + ".dwd_server_event_detail where " + columnName + "=" + userInfoDTO.getUserId()
+                        arrayList.add("select * from polaris." + product + "_dwd_server_event_detail where " + columnName + "=" + userInfoDTO.getUserId()
                                 + " and dt>='" + userInfoDTO.getDate() + "' and dt<='" +
                                 userInfoDTO.getDate() + "' and event_name in (" + String.join(",", entry.getValue()) + ") limit " + userInfoDTO.getPageNo() * 50);
                     } else {
-                        arrayList.add("select * from " + product + ".tl_server_event_hr where " + columnName + "=" + userInfoDTO.getUserId()
+                        arrayList.add("select * from polaris." + product + "_tl_server_event_hr where " + columnName + "=" + userInfoDTO.getUserId()
                                 + " and dt='" + userInfoDTO.getDate() + "' and event_name in (" + String.join(",", entry.getValue()) + ") limit " + userInfoDTO.getPageNo() * 50);
                     }
                     break;
                 case "client":
                     if (!userInfoDTO.getDate().equals(DateUtils.getDateString(System.currentTimeMillis(), "yyyyMMdd"))) {
-                        arrayList.add("select * from " + product + ".dwd_client_event_detail where " + columnName + "=" + userInfoDTO.getUserId()
+                        arrayList.add("select * from polaris." + product + "_dwd_client_event_detail where " + columnName + "=" + userInfoDTO.getUserId()
                                 + " and dt>='" + userInfoDTO.getDate() + "' and dt<='" +
                                 userInfoDTO.getDate() + "' and event_name in (" + String.join(",", entry.getValue()) + ") limit " + userInfoDTO.getPageNo() * 50);
                     } else {
-                        arrayList.add("select * from " + product + ".tl_client_event_hr where " + columnName + "=" + userInfoDTO.getUserId()
+                        arrayList.add("select * from polaris." + product + "_tl_client_event_hr where " + columnName + "=" + userInfoDTO.getUserId()
                                 + " and dt='" + userInfoDTO.getDate() + "' and event_name in (" + String.join(",", entry.getValue()) + ") limit " + userInfoDTO.getPageNo() * 50);
                     }
                     break;
                 case "h5":
                     if (!userInfoDTO.getDate().equals(DateUtils.getDateString(System.currentTimeMillis(), "yyyyMMdd"))) {
-                        arrayList.add("select * ct from " + product + ".dwd_h5_event_detail where " + columnName + "=" + userInfoDTO.getUserId()
+                        arrayList.add("select * ct from polaris." + product + "_dwd_h5_event_detail where " + columnName + "=" + userInfoDTO.getUserId()
                                 + " and dt>='" + userInfoDTO.getDate() + "' and dt<='" +
                                 userInfoDTO.getDate() + "' and event_name in (" + String.join(",", entry.getValue()) + ") limit " + userInfoDTO.getPageNo() * 50);
                     } else {
-                        arrayList.add("select * from " + product + ".tl_h5_event_hr where " + columnName + "=" + userInfoDTO.getUserId()
+                        arrayList.add("select * from polaris." + product + "_tl_h5_event_hr where " + columnName + "=" + userInfoDTO.getUserId()
                                 + " and dt='" + userInfoDTO.getDate() + "' and event_name in (" + String.join(",", entry.getValue()) + ") limit " + userInfoDTO.getPageNo() * 50);
                     }
                     break;
                 case "technology":
-                    arrayList.add("select * from " + product + ".dwd_apm_client_event_detail where " + columnName + "=" + userInfoDTO.getUserId()
+                    arrayList.add("select * from polaris." + product + "_dwd_apm_client_event_detail where " + columnName + "=" + userInfoDTO.getUserId()
                             + " and dt>='" + userInfoDTO.getDate() + "' and dt<='" +
                             userInfoDTO.getDate() + "' and event_name in (" + String.join(",", entry.getValue()) + ") limit " + userInfoDTO.getPageNo() * 50);
                     break;
@@ -541,7 +543,7 @@ public class UserQueryService {
                     JSONObject jsonObject = new JSONObject();
                     jsonObject.put("isShow", false);
                     jsonObject.put("name", object.getString("event_name"));
-                    jsonObject.put("timestamp", DateUtils.getDateString(timestamp, "HH:mm:ss:SSS"));
+                    jsonObject.put("timestamp", DateUtils.getDateStringTimeZone(timestamp, "HH:mm:ss:SSS"));
                     jsonObject.put("timestamps", timestamp);
                     ArrayList<JSONObject> dataList = new ArrayList<>();
                     Set<Map.Entry<String, Object>> set = object.entrySet();
@@ -592,6 +594,8 @@ public class UserQueryService {
                         }
                     }
                 });
+
+                jsonObject.put("eventList", events);
             }
             Collections.sort(eventDetailList, new Comparator<JSONObject>() {
                 @Override

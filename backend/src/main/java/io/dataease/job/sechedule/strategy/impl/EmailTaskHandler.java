@@ -382,7 +382,7 @@ public class EmailTaskHandler extends TaskHandler implements Job {
 
     private String tokenByUser(SysUserEntity user) {
         TokenInfo tokenInfo = TokenInfo.builder().userId(user.getUserId()).username(user.getUsername()).build();
-        String token = JWTUtils.sign(tokenInfo, user.getPassword(), false);
+        String token = JWTUtils.sign(tokenInfo, user.getPassword());
 
         return token;
     }

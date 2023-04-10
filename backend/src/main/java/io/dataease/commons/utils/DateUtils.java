@@ -1,10 +1,9 @@
 package io.dataease.commons.utils;
 
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.util.*;
 
 
 public class DateUtils {
@@ -33,6 +32,14 @@ public class DateUtils {
 
     public static String getDateString(long date, String format) throws Exception {
         SimpleDateFormat dateFormat = new SimpleDateFormat(format);
+        return dateFormat.format(new Date(date));
+    }
+
+    public static String getDateStringTimeZone(long date, String format) throws Exception {
+        SimpleDateFormat dateFormat = new SimpleDateFormat(format);
+        ZoneId zoneId = ZoneId.ofOffset("GMT", ZoneOffset.ofHours(0));
+        TimeZone timeZone = TimeZone.getTimeZone(zoneId);
+        dateFormat.setTimeZone(timeZone);
         return dateFormat.format(new Date(date));
     }
 
