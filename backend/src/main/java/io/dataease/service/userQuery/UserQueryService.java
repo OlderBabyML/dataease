@@ -20,6 +20,8 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.*;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 @Service
 public class UserQueryService {
@@ -187,7 +189,14 @@ public class UserQueryService {
                 }
             }
         }
-        return options;
+        List<JSONObject> objects = options.stream().filter(new Predicate<JSONObject>() {
+            @Override
+            public boolean test(JSONObject jsonObject) {
+                List children = jsonObject.getObject("children", List.class);
+                return children.size() > 0;
+            }
+        }).collect(Collectors.toList());
+        return objects;
     }
 
     public JSONObject getUserEventNum(UserInfoDTO userInfoDTO) throws Exception {
