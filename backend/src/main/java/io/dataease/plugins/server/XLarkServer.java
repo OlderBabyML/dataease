@@ -133,7 +133,7 @@ public class XLarkServer {
             }
             TokenInfo tokenInfo = TokenInfo.builder().userId(sysUserEntity.getUserId()).username(sysUserEntity.getUsername()).build();
             String realPwd = sysUserEntity.getPassword();
-            String token = JWTUtils.sign(tokenInfo, realPwd, !isMobile);
+            String token = JWTUtils.sign(tokenInfo, realPwd);
             ServletUtils.setToken(token);
 
             DeLogUtils.save(SysLogConstants.OPERATE_TYPE.LOGIN, SysLogConstants.SOURCE_TYPE.USER, sysUserEntity.getUserId(), null, null, null);

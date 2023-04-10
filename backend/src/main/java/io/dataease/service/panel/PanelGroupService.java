@@ -45,7 +45,8 @@ import org.apache.poi.hssf.usermodel.HSSFClientAnchor;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.poi.xssf.streaming.SXSSFSheet;
+import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.pentaho.di.core.util.UUIDUtil;
 import org.quartz.SchedulerException;
 import org.slf4j.Logger;
@@ -696,9 +697,9 @@ public class PanelGroupService {
             Integer[] excelTypes = request.getExcelTypes();
             details.add(0, request.getHeader());
 
-            Workbook wb = new XSSFWorkbook();
+            SXSSFWorkbook wb = new SXSSFWorkbook(500);
             //明细sheet
-            Sheet detailsSheet = wb.createSheet("数据");
+            SXSSFSheet detailsSheet = wb.createSheet("数据");
 
 
             //给单元格设置样式
@@ -812,8 +813,7 @@ public class PanelGroupService {
                                     LogUtil.warn("export excel data transform error");
                                 }
                             }
-
-
+                            detailsSheet.flushRows(500);
                         }
                     }
                 }
@@ -1208,7 +1208,7 @@ public class PanelGroupService {
                 componentFilterInfo.setExcelExportFlag(true);
                 componentFilterInfo.setProxy(request.getProxy());
                 componentFilterInfo.setUser(request.getUserId());
-                ChartViewDTO chartViewInfo = chartViewService.getData(request.getViewId(), componentFilterInfo);
+                ChartViewDTO chartViewInfo = chartViewService.getDataDownload(request.getViewId(), componentFilterInfo);
                 List<Map> tableRow = (List) chartViewInfo.getData().get("tableRow");
                 List<Object[]> result = new ArrayList<>();
                 for (Map detailMap : tableRow) {
