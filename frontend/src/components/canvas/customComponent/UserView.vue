@@ -159,7 +159,7 @@
         <el-button
           v-if="showChartInfoType==='details' && hasDataPermission('export',panelInfo.privileges)"
           size="mini"
-          :disabled="$store.getters.loadingMap[$store.getters.currentPath]"
+          :disabled="$store.getters.loadingMap[$store.getters.currentPath] || dialogLoading"
           @click="exportExcel"
         >
           <svg-icon
@@ -819,6 +819,7 @@ export default {
       predefineColors: COLOR_PANEL,
       alarm: {},
       jobLogList: [],
+      dialogLoading: false,
       imageDownloading: false,
       innerRefreshTimer: null,
       dialogFormVisibleLog: false,
@@ -1159,7 +1160,10 @@ export default {
       }
     },
     exportExcel() {
-      this.$refs['userViewDialog'].exportExcel()
+      this.dialogLoading = true
+      this.$refs['userViewDialog'].exportExcel(() => {
+        this.dialogLoading = false
+      })
     },
     exportJSON() {
       this.$refs['userViewDialog'].exportJsonDownload()
