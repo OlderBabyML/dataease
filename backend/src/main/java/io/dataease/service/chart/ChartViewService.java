@@ -1,6 +1,7 @@
 package io.dataease.service.chart;
 
 import cn.hutool.core.lang.Assert;
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.google.gson.Gson;
@@ -12,10 +13,7 @@ import io.dataease.commons.constants.JdbcConstants;
 import io.dataease.commons.constants.SysLogConstants;
 import io.dataease.commons.exception.DEException;
 import io.dataease.commons.model.PluginViewSetImpl;
-import io.dataease.commons.utils.AuthUtils;
-import io.dataease.commons.utils.BeanUtils;
-import io.dataease.commons.utils.DateUtils;
-import io.dataease.commons.utils.LogUtil;
+import io.dataease.commons.utils.*;
 import io.dataease.controller.request.chart.*;
 import io.dataease.controller.response.ChartDetail;
 import io.dataease.controller.response.DataSetDetail;
@@ -58,6 +56,7 @@ import io.dataease.service.dataset.*;
 import io.dataease.service.datasource.DatasourceService;
 import io.dataease.service.engine.EngineService;
 import io.dataease.service.panel.PanelGroupExtendDataService;
+import io.dataease.service.panel.PanelGroupService;
 import io.dataease.service.sys.log.LogService;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
@@ -71,6 +70,8 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -2302,8 +2303,76 @@ public class ChartViewService {
         chartViewDTO = uniteViewResult(datasourceRequest.getQuery(), mapChart, mapTableNormal, view, isDrill, drillFilters, dynamicAssistFields, assistData);
         chartViewDTO.setTotalPage(totalPage);
         chartViewDTO.setTotalItems(totalItems);
-        chartViewDTO = checkTextAlarm(chartViewDTO, view, extFilterList);
+        try {
+            chartViewDTO = checkTextAlarm(chartViewDTO, view, extFilterList);
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            PanelGroupService panelGroupService = (PanelGroupService) CommonBeanFactory.getBean(PanelGroupService.class);
+            SchedulerIndexExample schedulerIndexExample = new SchedulerIndexExample();
+            schedulerIndexExample.createCriteria().andChartIdEqualTo(chartViewDTO.getId());
+            List<SchedulerIndexWithBLOBs> schedulerIndexWithBLOBs = schedulerIndexMapper.selectByExampleWithBLOBs(schedulerIndexExample);
+            for (SchedulerIndexWithBLOBs schedulerIndexWithBLOB : schedulerIndexWithBLOBs) {
+                ChartViewDTO view1 = getOne(schedulerIndexWithBLOB.getChartId(), null);
+                PanelGroupWithBLOBs panel1 = panelGroupService.findPanelForChartId(view1.getId());
+                Type ruleType = new TypeToken<List<RuleAndSend>>() {
+                }.getType();
+                List<RuleAndSend> rules = gson.fromJson(schedulerIndexWithBLOB.getRules(), ruleType);
+                for (RuleAndSend rule : rules) {
+                    Type ruleType1 = new TypeToken<RuleAndSend>() {
+                    }.getType();
+                    RuleAndSend send = gson.fromJson(JSON.toJSONString(rule.getSend()), ruleType1);
+                    sendAlarm(send, panel1, view1, e.getMessage().replaceAll(" ", "_").replaceAll("\n", "").replaceAll("\r", ""));
+                }
+            }
+            e.printStackTrace();
+        }
         return chartViewDTO;
+    }
+
+    public boolean sendAlarm(RuleAndSend send, PanelGroupWithBLOBs panel, ChartViewDTO view, String msg) throws IOException {
+        String type = send.getType();
+        List<SysUser> users = send.getUsers();
+        String link = send.getLink();
+        if (users == null && (link == null || link.equals(""))) {
+            return false;
+        }
+        if (type == null) {
+            return false;
+        }
+        switch (type) {
+            case "邮箱":
+                for (SysUser user : users) {
+                    Runtime.getRuntime().exec("python " + File.separator + "data" + File.separator + "data-platform" + File.separator + "tools" + File.separator + "index_alarm.py"
+                            + " -t mail -u " + user.getUsername()
+                            + " -s " + panel.getName() + ":" + view.getName() + "报警触发失败,请检查条件设置是否正常"
+                            + " -m " + msg);
+                }
+                break;
+            case "飞书个人":
+                for (SysUser user : users) {
+                    Runtime.getRuntime().exec("python " + File.separator + "data" + File.separator + "data-platform" + File.separator + "tools" + File.separator + "index_alarm.py"
+                            + " -t person -u " + user.getNickName()
+                            + " -i " + user.getToken()
+                            + " -s " + panel.getName() + ":" + view.getName() + "报警触发失败,请检查条件设置是否正常"
+                            + " -m " + msg);
+                }
+                break;
+            case "电话":
+                for (SysUser user : users) {
+                    String[] cmd = {"sh", "-c", "sh " + File.separator + "data" + File.separator + "data-platform" + File.separator + "tools" + File.separator + "callPhone.sh"
+                            + " " + user.getPhone().substring(3)
+                            + " '" + panel.getName() + ":" + view.getName() + "报警触发失败,请检查条件设置是否正常" + msg + "'"};
+                    Runtime.getRuntime().exec(cmd);
+                }
+                break;
+            case "飞书群组":
+                Runtime.getRuntime().exec("python " + File.separator + "data" + File.separator + "data-platform" + File.separator + "tools" + File.separator + "index_alarm.py"
+                        + " -t group -H " + link
+                        + " -s " + panel.getName() + ":" + view.getName() + "报警触发失败,请检查条件设置是否正常"
+                        + " -m " + msg);
+                break;
+        }
+        return true;
     }
 
     public ChartViewDTO checkTextAlarm(ChartViewDTO chartViewDTO, ChartViewDTO view, List<ChartExtFilterRequest> extFilterList) throws Exception {

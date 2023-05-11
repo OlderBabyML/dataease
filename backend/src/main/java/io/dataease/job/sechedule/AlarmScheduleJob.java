@@ -1,5 +1,6 @@
 package io.dataease.job.sechedule;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -128,7 +129,7 @@ public class AlarmScheduleJob implements Job {
             for (RuleAndSend rule : rules) {
                 Type ruleType1 = new TypeToken<RuleAndSend>() {
                 }.getType();
-                RuleAndSend send = gson.fromJson(rule.getSend().toString(), ruleType1);
+                RuleAndSend send = gson.fromJson(JSON.toJSONString(rule.getSend()), ruleType1);
                 String operate = rule.getOperate();
                 String type = rule.getType();
                 String condition = rule.getCondition();

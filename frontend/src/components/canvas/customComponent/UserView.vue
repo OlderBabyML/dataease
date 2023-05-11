@@ -144,7 +144,7 @@
           v-if="showChartInfoType==='enlarge' && hasDataPermission('export',panelInfo.privileges)&& showChartInfo && showChartInfo.type !== 'symbol-map'"
           class="el-icon-picture-outline"
           size="mini"
-          :disabled ="imageDownloading"
+          :disabled="imageDownloading"
           @click="exportViewImg"
         >
           {{ $t('chart.export_img') }}
@@ -1166,7 +1166,7 @@ export default {
     },
     exportViewImg() {
       this.imageDownloading = true
-      this.$refs['userViewDialog'].exportViewImg(()=>{
+      this.$refs['userViewDialog'].exportViewImg(() => {
         this.imageDownloading = false
       })
     },
@@ -1493,15 +1493,22 @@ export default {
       tableChart.customStyle = JSON.stringify(tableChart.customStyle)
 
       this.showChartInfo = this.chart
-      this.indexList = this.chart.data.fields.filter((x) => { return x.extField === 1 || x.extField === 2 })
+      if (typeof this.chart.data === 'undefined') {
+        this.chart.data = {}
+      }
+      if (typeof this.chart.data.fields !== 'undefined') {
+        this.indexList = this.chart.data.fields.filter((x) => { return x.extField === 1 || x.extField === 2 })
+      }
       const arr = []
       if (typeof this.chart.data.series !== 'undefined') {
         this.chart.data.series.forEach((item) => {
-          this.chart.data.fields.forEach((x) => {
-            if (x.name === item.name) {
-              arr.push(x)
-            }
-          })
+          if (typeof this.chart.data.fields !== 'undefined') {
+            this.chart.data.fields.forEach((x) => {
+              if (x.name === item.name) {
+                arr.push(x)
+              }
+            })
+          }
         })
       }
       arr.forEach((x) => {

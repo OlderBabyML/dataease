@@ -31,8 +31,8 @@
             maxElementsInMemory="1000"
             overflowToDisk="false"
             diskPersistent="false"
-            timeToIdleSeconds="0"
-            timeToLiveSeconds="600"
+            timeToIdleSeconds="20"
+            timeToLiveSeconds="20"
             memoryStoreEvictionPolicy="LRU"
     />
     <cache
@@ -42,8 +42,8 @@
             maxElementsOnDisk="1000"
             overflowToDisk="true"
             diskPersistent="true"
-            timeToIdleSeconds="1800"
-            timeToLiveSeconds="3600"
+            timeToIdleSeconds="20"
+            timeToLiveSeconds="20"
             memoryStoreEvictionPolicy="LRU"
     />
     <cache
@@ -53,8 +53,8 @@
             maxElementsOnDisk="1000"
             overflowToDisk="true"
             diskPersistent="true"
-            timeToIdleSeconds="1800"
-            timeToLiveSeconds="3600"
+            timeToIdleSeconds="20"
+            timeToLiveSeconds="20"
             memoryStoreEvictionPolicy="LRU"
     />
     <cache
@@ -64,8 +64,8 @@
             maxElementsOnDisk="1000"
             overflowToDisk="true"
             diskPersistent="true"
-            timeToIdleSeconds="1800"
-            timeToLiveSeconds="3600"
+            timeToIdleSeconds="20"
+            timeToLiveSeconds="20"
             memoryStoreEvictionPolicy="LRU"
     />
 
@@ -89,8 +89,8 @@
             maxElementsOnDisk="10000"
             overflowToDisk="true"
             diskPersistent="true"
-            timeToIdleSeconds="28800"
-            timeToLiveSeconds="86400"
+            timeToIdleSeconds="20"
+            timeToLiveSeconds="20"
             memoryStoreEvictionPolicy="LRU"
     />
 
@@ -123,8 +123,8 @@
             maxElementsOnDisk="10000"
             overflowToDisk="true"
             diskPersistent="false"
-            timeToIdleSeconds="28800"
-            timeToLiveSeconds="86400"
+            timeToIdleSeconds="20"
+            timeToLiveSeconds="20"
             memoryStoreEvictionPolicy="LRU"
     />
 
@@ -193,8 +193,8 @@
             maxElementsOnDisk="1000"
             overflowToDisk="true"
             diskPersistent="true"
-            timeToIdleSeconds="1800"
-            timeToLiveSeconds="3600"
+            timeToIdleSeconds="20"
+            timeToLiveSeconds="20"
             memoryStoreEvictionPolicy="LRU"
     />
     <!--角色授权数据集缓存-->
@@ -205,8 +205,8 @@
             maxElementsOnDisk="1000"
             overflowToDisk="true"
             diskPersistent="true"
-            timeToIdleSeconds="1800"
-            timeToLiveSeconds="3600"
+            timeToIdleSeconds="20"
+            timeToLiveSeconds="20"
             memoryStoreEvictionPolicy="LRU"
     />
     <!--角色授权仪表板缓存-->
@@ -217,8 +217,8 @@
             maxElementsOnDisk="1000"
             overflowToDisk="true"
             diskPersistent="true"
-            timeToIdleSeconds="1800"
-            timeToLiveSeconds="3600"
+            timeToIdleSeconds="20"
+            timeToLiveSeconds="20"
             memoryStoreEvictionPolicy="LRU"
     />
 
@@ -230,8 +230,8 @@
             maxElementsOnDisk="1000"
             overflowToDisk="true"
             diskPersistent="true"
-            timeToIdleSeconds="1800"
-            timeToLiveSeconds="3600"
+            timeToIdleSeconds="20"
+            timeToLiveSeconds="20"
             memoryStoreEvictionPolicy="LRU"
     />
     <!--组织授权数据集缓存-->
@@ -242,8 +242,8 @@
             maxElementsOnDisk="1000"
             overflowToDisk="true"
             diskPersistent="true"
-            timeToIdleSeconds="1800"
-            timeToLiveSeconds="3600"
+            timeToIdleSeconds="20"
+            timeToLiveSeconds="20"
             memoryStoreEvictionPolicy="LRU"
     />
     <!--组织授权仪表板缓存-->
@@ -254,8 +254,8 @@
             maxElementsOnDisk="1000"
             overflowToDisk="true"
             diskPersistent="true"
-            timeToIdleSeconds="1800"
-            timeToLiveSeconds="3600"
+            timeToIdleSeconds="20"
+            timeToLiveSeconds="20"
             memoryStoreEvictionPolicy="LRU"
     />
     <cache
@@ -265,8 +265,8 @@
             maxElementsOnDisk="1000"
             overflowToDisk="true"
             diskPersistent="true"
-            timeToIdleSeconds="1800"
-            timeToLiveSeconds="3600"
+            timeToIdleSeconds="20"
+            timeToLiveSeconds="20"
             memoryStoreEvictionPolicy="LRU"
     />
 
@@ -276,8 +276,8 @@
             maxElementsInMemory="5000"
             maxElementsOnDisk="50000"
             overflowToDisk="true"
-            timeToIdleSeconds="28800"
-            timeToLiveSeconds="28800"
+            timeToIdleSeconds="20"
+            timeToLiveSeconds="20"
             memoryStoreEvictionPolicy="LRU"
             diskPersistent="true">
             <BootstrapCacheLoaderFactory class="net.sf.ehcache.store.DiskStoreBootstrapCacheLoaderFactory" properties="bootstrapAsynchronously=true" />
@@ -289,8 +289,8 @@
             maxElementsInMemory="5000"
             maxElementsOnDisk="50000"
             overflowToDisk="true"
-            timeToIdleSeconds="28800"
-            timeToLiveSeconds="28800"
+            timeToIdleSeconds="20"
+            timeToLiveSeconds="20"
             memoryStoreEvictionPolicy="LRU"
             diskPersistent="true">
         <BootstrapCacheLoaderFactory class="net.sf.ehcache.store.DiskStoreBootstrapCacheLoaderFactory" properties="bootstrapAsynchronously=true" />
@@ -303,8 +303,8 @@
             maxElementsOnDisk="1000"
             overflowToDisk="true"
             diskPersistent="true"
-            timeToIdleSeconds="1800"
-            timeToLiveSeconds="3600"
+            timeToIdleSeconds="20"
+            timeToLiveSeconds="20"
             memoryStoreEvictionPolicy="LRU"
     />
 
