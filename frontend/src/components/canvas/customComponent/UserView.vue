@@ -1661,58 +1661,62 @@ export default {
       this.chartAlarmVisible = false
     },
     save() {
-      saveScheduler(this.chart.id, {
-        ...this.alarm,
-        timeField: JSON.stringify(this.alarm.timeField),
-        rules: JSON.stringify(this.alarm.rules),
-        sends: JSON.stringify(this.alarm.sends)
-      }).then((res) => {
-        const arr = []
-        const x = res.data
-        if (typeof x.indexField !== 'undefined') {
-          x.name = JSON.parse(x.indexField).name
-        }
-        if (typeof x.format === 'undefined') {
-          this.$set(x, 'format', 'yyyy-MM-dd')
-        }
-        if (typeof x.timeField === 'undefined') {
-          this.$set(x, 'timeField', { name: '' })
-        } else {
-          x.timeField = JSON.parse(x.timeField)
-        }
-        if (typeof x.timeNumber === 'undefined') {
-          this.$set(x, 'timeNumber', 1)
-        }
-        if (typeof x.timeType === 'undefined') {
-          this.$set(x, 'timeType', '天')
-        }
-        if (typeof x.sends === 'undefined') {
-          this.$set(x, 'sends', [])
-          x.sends.push({ type: '飞书群组' })
-        } else {
-          x.sends = JSON.parse(x.sends)
-        }
-        if (typeof x.rules === 'undefined') {
-          this.$set(x, 'rules', [])
-          x.rules.push({ type: '固定值', operate: '高于' })
-        } else {
-          x.rules = JSON.parse(x.rules)
-        }
-        arr.push(JSON.parse(JSON.stringify(x)))
-        this.indexList.forEach((y) => {
-          let flag = true
-          const index = JSON.parse(res.data.indexField)
-          if (JSON.parse(y.indexField).id === index.id) {
-            flag = false
+      if (typeof this.alarm.timeField === 'undefined' || this.alarm.timeField === '' || typeof this.alarm.cron === 'undefined' || this.alarm.cron === '') {
+        this.$warning('定时必须或者时间字段必须被设置！！')
+      } else {
+        saveScheduler(this.chart.id, {
+          ...this.alarm,
+          timeField: JSON.stringify(this.alarm.timeField),
+          rules: JSON.stringify(this.alarm.rules),
+          sends: JSON.stringify(this.alarm.sends)
+        }).then((res) => {
+          const arr = []
+          const x = res.data
+          if (typeof x.indexField !== 'undefined') {
+            x.name = JSON.parse(x.indexField).name
           }
-          if (flag) {
-            arr.push(y)
+          if (typeof x.format === 'undefined') {
+            this.$set(x, 'format', 'yyyy-MM-dd')
           }
+          if (typeof x.timeField === 'undefined') {
+            this.$set(x, 'timeField', { name: '' })
+          } else {
+            x.timeField = JSON.parse(x.timeField)
+          }
+          if (typeof x.timeNumber === 'undefined') {
+            this.$set(x, 'timeNumber', 1)
+          }
+          if (typeof x.timeType === 'undefined') {
+            this.$set(x, 'timeType', '天')
+          }
+          if (typeof x.sends === 'undefined') {
+            this.$set(x, 'sends', [])
+            x.sends.push({ type: '飞书群组' })
+          } else {
+            x.sends = JSON.parse(x.sends)
+          }
+          if (typeof x.rules === 'undefined') {
+            this.$set(x, 'rules', [])
+            x.rules.push({ type: '固定值', operate: '高于' })
+          } else {
+            x.rules = JSON.parse(x.rules)
+          }
+          arr.push(JSON.parse(JSON.stringify(x)))
+          this.indexList.forEach((y) => {
+            let flag = true
+            const index = JSON.parse(res.data.indexField)
+            if (JSON.parse(y.indexField).id === index.id) {
+              flag = false
+            }
+            if (flag) {
+              arr.push(y)
+            }
+          })
+          this.indexList = arr
+          this.chartAlarmVisible = false
+          this.openMessageSuccess('commons.save_success')
         })
-        this.indexList = arr
-        this.chartAlarmVisible = false
-        this.openMessageSuccess('commons.save_success')
-      })
+      }
     },
     updateStatus(row) {
       statusScheduler({ id: row.id, chartId: this.chart.id }).then((res) => {
