@@ -1176,6 +1176,8 @@ public class ImpalaQueryProvider extends QueryProvider {
                 return "yyyy" + split + "MM";
             case "y_M_d":
                 return "yyyy" + split + "MM" + split + "dd";
+            case "y_M_d_H":
+                return "yyyy" + split + "MM" + split + "dd" + " HH";
             case "H_m_s":
                 return "HH:mm:ss";
             case "y_M_d_H_m":
@@ -1202,7 +1204,7 @@ public class ImpalaQueryProvider extends QueryProvider {
             if (x.getDeType() == DeTypeConstants.DE_TIME) {
                 String format = transDateFormat(x.getDateStyle(), x.getDatePattern());
                 if (x.getDeExtractType() == DeTypeConstants.DE_STRING) {
-                    fieldName = String.format(ImpalaConstants.STR_TO_DATE, originField, StringUtils.isNotEmpty(x.getDateFormat()) ? x.getDateFormat() : ImpalaConstants.DEFAULT_DATE_FORMAT ,ImpalaConstants.DEFAULT_DATE_FORMAT);
+                    fieldName = String.format(ImpalaConstants.STR_TO_DATE, originField, StringUtils.isNotEmpty(x.getDateFormat()) ? x.getDateFormat() : ImpalaConstants.DEFAULT_DATE_FORMAT, ImpalaConstants.DEFAULT_DATE_FORMAT);
                     fieldName = String.format(ImpalaConstants.DATE_FORMAT, fieldName, format);
                 } else {
                     String cast = String.format(ImpalaConstants.CAST, originField, ImpalaConstants.DEFAULT_INT_FORMAT) + "/1000";

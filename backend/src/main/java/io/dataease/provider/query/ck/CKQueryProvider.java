@@ -1247,6 +1247,8 @@ public class CKQueryProvider extends QueryProvider {
                 return "%Y" + split + "%m";
             case "y_M_d":
                 return "%Y" + split + "%m" + split + "%d";
+            case "y_M_d_H":
+                return "%Y" + split + "%m" + split + "%d" + " %H";
             case "H_m_s":
                 return "%H:%M:%S";
             case "y_M_d_H_m":
