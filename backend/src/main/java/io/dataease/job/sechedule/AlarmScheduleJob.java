@@ -158,13 +158,15 @@ public class AlarmScheduleJob implements Job {
                     fieldCustomFilterType.setFilter(filterItemDTOS);
                     fieldCustomFilter.add(fieldCustomFilterType);
 
-                    ChartViewFieldDTO chartViewFieldDTO = new ChartViewFieldDTO();
-                    chartViewFieldDTO.setOriginName(dataSetField.getOriginName());
-                    chartViewFieldDTO.setDataeaseName(dataSetField.getDataeaseName());
-                    chartViewFieldDTO.setDeExtractType(dataSetField.getDeExtractType());
-                    chartViewFieldDTO.setDeType(dataSetField.getDeType());
-                    xAxis.add(chartViewFieldDTO);
-                    view.setXAxis(JSONObject.toJSONString(xAxis));
+                    if (dataSetField.getExtField() != 2) {
+                        ChartViewFieldDTO chartViewFieldDTO = new ChartViewFieldDTO();
+                        chartViewFieldDTO.setOriginName(dataSetField.getOriginName());
+                        chartViewFieldDTO.setDataeaseName(dataSetField.getDataeaseName());
+                        chartViewFieldDTO.setDeExtractType(dataSetField.getDeExtractType());
+                        chartViewFieldDTO.setDeType(dataSetField.getDeType());
+                        xAxis.add(chartViewFieldDTO);
+                        view.setXAxis(JSONObject.toJSONString(xAxis));
+                    }
 
                     ruleDatabaseName = dataSetField.getDataeaseName();
 
@@ -197,7 +199,13 @@ public class AlarmScheduleJob implements Job {
                                         indexNameList.add(hashMap.get(o.toString()).toString());
                                     }
                                 }
-                                BigDecimal o = (BigDecimal) hashMap.get(index.getDataeaseName());
+                                BigDecimal o = null;
+                                Object o1 = hashMap.get(index.getDataeaseName());
+                                if (o1 instanceof BigDecimal) {
+                                    o = (BigDecimal) hashMap.get(index.getDataeaseName());
+                                } else {
+                                    o = BigDecimal.valueOf((Long.parseLong(o1.toString())));
+                                }
                                 if (o.compareTo(value) > 0) {
                                     FolderItem folderItem = new FolderItem();
                                     folderItem.setName(hashMap.get(chartFieldCustomFilterDTO.getDataeaseName()).toString() + ":指标在" + StringUtils.join(indexNameList, ",").replaceAll("\\s+", "_") + "下,值为:" + o + "（高于设定的值" + value + "）");
@@ -223,7 +231,13 @@ public class AlarmScheduleJob implements Job {
                                             indexNameList.add(hashMap.get(o.toString()).toString());
                                         }
                                     }
-                                    BigDecimal o = (BigDecimal) hashMap.get(index.getDataeaseName());
+                                    BigDecimal o = null;
+                                    Object o1 = hashMap.get(index.getDataeaseName());
+                                    if (o1 instanceof BigDecimal) {
+                                        o = (BigDecimal) hashMap.get(index.getDataeaseName());
+                                    } else {
+                                        o = BigDecimal.valueOf((Long.parseLong(o1.toString())));
+                                    }
                                     BigDecimal bigDecimal = avgDataMap.get(StringUtils.join(indexNameList, ","));
                                     if (bigDecimal == null || bigDecimal.toString().equals("0")) {
                                         continue;
@@ -245,7 +259,13 @@ public class AlarmScheduleJob implements Job {
                                 }
                             } else {
                                 for (HashMap hashMap : tableRow) {
-                                    BigDecimal o = (BigDecimal) hashMap.get(index.getDataeaseName());
+                                    BigDecimal o = null;
+                                    Object o1 = hashMap.get(index.getDataeaseName());
+                                    if (o1 instanceof BigDecimal) {
+                                        o = (BigDecimal) hashMap.get(index.getDataeaseName());
+                                    } else {
+                                        o = BigDecimal.valueOf((Long.parseLong(o1.toString())));
+                                    }
                                     BigDecimal bigDecimal = avgDataMap.get("date");
                                     BigDecimal avg = bigDecimal.divide(new BigDecimal(numDay), 8, RoundingMode.HALF_UP);
                                     if (avg.toString().equals("0")) {
@@ -277,7 +297,13 @@ public class AlarmScheduleJob implements Job {
                                             indexNameList.add(hashMap.get(o.toString()).toString());
                                         }
                                     }
-                                    BigDecimal o = (BigDecimal) hashMap.get(index.getDataeaseName());
+                                    BigDecimal o = null;
+                                    Object o1 = hashMap.get(index.getDataeaseName());
+                                    if (o1 instanceof BigDecimal) {
+                                        o = (BigDecimal) hashMap.get(index.getDataeaseName());
+                                    } else {
+                                        o = BigDecimal.valueOf((Long.parseLong(o1.toString())));
+                                    }
                                     BigDecimal bigDecimal = avgDataMap.get(StringUtils.join(indexNameList, ","));
                                     if (bigDecimal == null || bigDecimal.toString().equals("0")) {
                                         continue;
@@ -323,7 +349,13 @@ public class AlarmScheduleJob implements Job {
                                         indexNameList.add(hashMap.get(o.toString()).toString());
                                     }
                                 }
-                                BigDecimal o = (BigDecimal) hashMap.get(index.getDataeaseName());
+                                BigDecimal o = null;
+                                Object o1 = hashMap.get(index.getDataeaseName());
+                                if (o1 instanceof BigDecimal) {
+                                    o = (BigDecimal) hashMap.get(index.getDataeaseName());
+                                } else {
+                                    o = BigDecimal.valueOf((Long.parseLong(o1.toString())));
+                                }
                                 if (o.compareTo(value) < 0) {
                                     FolderItem folderItem = new FolderItem();
                                     folderItem.setName(hashMap.get(chartFieldCustomFilterDTO.getDataeaseName()).toString() + ":指标在" + StringUtils.join(indexNameList, ",").replaceAll("\\s+", "_") + "下,值为:" + o + "（低于设定的值" + value + "）");
@@ -349,7 +381,13 @@ public class AlarmScheduleJob implements Job {
                                             indexNameList.add(hashMap.get(o.toString()).toString());
                                         }
                                     }
-                                    BigDecimal o = (BigDecimal) hashMap.get(index.getDataeaseName());
+                                    BigDecimal o = null;
+                                    Object o1 = hashMap.get(index.getDataeaseName());
+                                    if (o1 instanceof BigDecimal) {
+                                        o = (BigDecimal) hashMap.get(index.getDataeaseName());
+                                    } else {
+                                        o = BigDecimal.valueOf((Long.parseLong(o1.toString())));
+                                    }
                                     BigDecimal bigDecimal = avgDataMap.get(StringUtils.join(indexNameList, ","));
                                     if (bigDecimal == null || bigDecimal.toString().equals("0")) {
                                         continue;
@@ -371,7 +409,13 @@ public class AlarmScheduleJob implements Job {
                                 }
                             } else {
                                 for (HashMap hashMap : tableRow) {
-                                    BigDecimal o = (BigDecimal) hashMap.get(index.getDataeaseName());
+                                    BigDecimal o = null;
+                                    Object o1 = hashMap.get(index.getDataeaseName());
+                                    if (o1 instanceof BigDecimal) {
+                                        o = (BigDecimal) hashMap.get(index.getDataeaseName());
+                                    } else {
+                                        o = BigDecimal.valueOf((Long.parseLong(o1.toString())));
+                                    }
                                     BigDecimal bigDecimal = avgDataMap.get("date");
                                     BigDecimal avg = bigDecimal.divide(new BigDecimal(numDay), 8, RoundingMode.HALF_UP);
                                     if (avg.toString().equals("0")) {
@@ -403,7 +447,13 @@ public class AlarmScheduleJob implements Job {
                                             indexNameList.add(hashMap.get(o.toString()).toString());
                                         }
                                     }
-                                    BigDecimal o = (BigDecimal) hashMap.get(index.getDataeaseName());
+                                    BigDecimal o = null;
+                                    Object o1 = hashMap.get(index.getDataeaseName());
+                                    if (o1 instanceof BigDecimal) {
+                                        o = (BigDecimal) hashMap.get(index.getDataeaseName());
+                                    } else {
+                                        o = BigDecimal.valueOf((Long.parseLong(o1.toString())));
+                                    }
                                     BigDecimal bigDecimal = avgDataMap.get(StringUtils.join(indexNameList, ","));
                                     if (bigDecimal == null || bigDecimal.toString().equals("0")) {
                                         continue;
@@ -421,7 +471,13 @@ public class AlarmScheduleJob implements Job {
                                 }
                             } else {
                                 for (HashMap hashMap : tableRow) {
-                                    BigDecimal o = (BigDecimal) hashMap.get(index.getDataeaseName());
+                                    BigDecimal o = null;
+                                    Object o1 = hashMap.get(index.getDataeaseName());
+                                    if (o1 instanceof BigDecimal) {
+                                        o = (BigDecimal) hashMap.get(index.getDataeaseName());
+                                    } else {
+                                        o = BigDecimal.valueOf((Long.parseLong(o1.toString())));
+                                    }
                                     BigDecimal bigDecimal = avgDataMap.get("date");
                                     if (bigDecimal != null && bigDecimal.toString().equals("0")) {
                                         continue;
@@ -453,7 +509,7 @@ public class AlarmScheduleJob implements Job {
                                 Runtime.getRuntime().exec("python " + File.separator + "data" + File.separator + "data-platform" + File.separator + "tools" + File.separator + "index_alarm.py"
                                         + " -t mail -u " + user.getUsername()
                                         + " -s " + panel.getName() + ":" + view.getName() + "指标报警"
-                                        + " -m " + StringUtils.join(msg, ","));
+                                        + " -m " + StringUtils.join(msg, ",").replaceAll(" ", "_"));
                             }
                             break;
                         case "飞书个人":
@@ -462,14 +518,14 @@ public class AlarmScheduleJob implements Job {
                                         + " -t person -u " + user.getNickName()
                                         + " -i " + user.getToken()
                                         + " -s " + panel.getName() + ":" + view.getName() + "指标报警"
-                                        + " -m " + StringUtils.join(msg, ","));
+                                        + " -m " + StringUtils.join(msg, ",").replaceAll(" ", "_"));
                             }
                             break;
                         case "电话":
                             for (SysUser user : users) {
                                 String[] cmd = {"sh", "-c", "sh " + File.separator + "data" + File.separator + "data-platform" + File.separator + "tools" + File.separator + "callPhone.sh"
                                         + " " + user.getPhone().substring(3)
-                                        + " '" + panel.getName() + ":" + view.getName() + "指标报警" + StringUtils.join(msg, ",") + "'"};
+                                        + " '" + panel.getName() + ":" + view.getName() + "指标报警" + StringUtils.join(msg, ",").replaceAll(" ", "_") + "'"};
                                 Runtime.getRuntime().exec(cmd);
                             }
                             break;
@@ -477,7 +533,7 @@ public class AlarmScheduleJob implements Job {
                             Runtime.getRuntime().exec("python " + File.separator + "data" + File.separator + "data-platform" + File.separator + "tools" + File.separator + "index_alarm.py"
                                     + " -t group -H " + link
                                     + " -s " + panel.getName() + ":" + view.getName() + "指标报警"
-                                    + " -m " + StringUtils.join(msg, ","));
+                                    + " -m " + StringUtils.join(msg, ",").replaceAll(" ", "_"));
                             break;
                     }
                 }
@@ -513,7 +569,7 @@ public class AlarmScheduleJob implements Job {
                     Runtime.getRuntime().exec("python " + File.separator + "data" + File.separator + "data-platform" + File.separator + "tools" + File.separator + "index_alarm.py"
                             + " -t mail -u " + user.getUsername()
                             + " -s " + panel.getName() + ":" + view.getName() + "指标报警"
-                            + " -m " + msg);
+                            + " -m " + msg.replaceAll(" ", "_"));
                 }
                 break;
             case "飞书个人":
@@ -522,14 +578,14 @@ public class AlarmScheduleJob implements Job {
                             + " -t person -u " + user.getNickName()
                             + " -i " + user.getToken()
                             + " -s " + panel.getName() + ":" + view.getName() + "指标报警"
-                            + " -m " + msg);
+                            + " -m " + msg.replaceAll(" ", "_"));
                 }
                 break;
             case "电话":
                 for (SysUser user : users) {
                     String[] cmd = {"sh", "-c", "sh " + File.separator + "data" + File.separator + "data-platform" + File.separator + "tools" + File.separator + "callPhone.sh"
                             + " " + user.getPhone().substring(3)
-                            + " '" + panel.getName() + ":" + view.getName() + "指标报警" + msg + "'"};
+                            + " '" + panel.getName() + ":" + view.getName() + "指标报警" + msg.replaceAll(" ", "_") + "'"};
                     Runtime.getRuntime().exec(cmd);
                 }
                 break;
@@ -537,7 +593,7 @@ public class AlarmScheduleJob implements Job {
                 Runtime.getRuntime().exec("python " + File.separator + "data" + File.separator + "data-platform" + File.separator + "tools" + File.separator + "index_alarm.py"
                         + " -t group -H " + link
                         + " -s " + panel.getName() + ":" + view.getName() + "指标报警"
-                        + " -m " + msg);
+                        + " -m " + msg.replaceAll(" ", "_"));
                 break;
         }
         return true;

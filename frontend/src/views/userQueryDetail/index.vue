@@ -378,7 +378,6 @@ import {
   getUserEventDetail,
   getUserEventDetailForDate,
   getUserEventNum,
-  getUserInfo,
   getUserList
 } from '@/api/userQuery/index'
 import Timeline from '@/components/timeline/index'

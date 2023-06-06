@@ -2458,13 +2458,15 @@ public class ChartViewService {
 
                     fieldCustomFilter.add(fieldCustomFilterType);
 
-                    ChartViewFieldDTO chartViewFieldDTO = new ChartViewFieldDTO();
-                    chartViewFieldDTO.setOriginName(dataSetField.getOriginName());
-                    chartViewFieldDTO.setDataeaseName(dataSetField.getDataeaseName());
-                    chartViewFieldDTO.setDeExtractType(dataSetField.getDeExtractType());
-                    chartViewFieldDTO.setDeType(dataSetField.getDeType());
-                    xAxis.add(chartViewFieldDTO);
-                    view.setXAxis(JSONObject.toJSONString(xAxis));
+                    if (dataSetField.getExtField() != 2) {
+                        ChartViewFieldDTO chartViewFieldDTO = new ChartViewFieldDTO();
+                        chartViewFieldDTO.setOriginName(dataSetField.getOriginName());
+                        chartViewFieldDTO.setDataeaseName(dataSetField.getDataeaseName());
+                        chartViewFieldDTO.setDeExtractType(dataSetField.getDeExtractType());
+                        chartViewFieldDTO.setDeType(dataSetField.getDeType());
+                        xAxis.add(chartViewFieldDTO);
+                        view.setXAxis(JSONObject.toJSONString(xAxis));
+                    }
                 }
 
                 fieldCustomFilter.add(fieldCustomFilterTypeTime);
@@ -2488,7 +2490,13 @@ public class ChartViewService {
                     case "高于":
                         if (type.equals("固定值")) {
                             for (HashMap hashMap : tableRow) {
-                                BigDecimal o = (BigDecimal) hashMap.get(index.getDataeaseName());
+                                BigDecimal o = null;
+                                Object o1 = hashMap.get(index.getDataeaseName());
+                                if (o1 instanceof BigDecimal) {
+                                    o = (BigDecimal) hashMap.get(index.getDataeaseName());
+                                } else {
+                                    o = BigDecimal.valueOf((Long.parseLong(o1.toString())));
+                                }
                                 if (o.compareTo(value) > 0) {
                                     chartViewDTO.setAlarmColor(rule.getColor());
                                     break;
@@ -2509,7 +2517,13 @@ public class ChartViewService {
                                             indexNameList.add(hashMap.get(o.toString()).toString());
                                         }
                                     }
-                                    BigDecimal o = (BigDecimal) hashMap.get(index.getDataeaseName());
+                                    BigDecimal o = null;
+                                    Object o1 = hashMap.get(index.getDataeaseName());
+                                    if (o1 instanceof BigDecimal) {
+                                        o = (BigDecimal) hashMap.get(index.getDataeaseName());
+                                    } else {
+                                        o = BigDecimal.valueOf((Long.parseLong(o1.toString())));
+                                    }
                                     BigDecimal bigDecimal = avgDataMap.get(org.apache.commons.lang.StringUtils.join(indexNameList, ","));
                                     if (bigDecimal == null) {
                                         continue;
@@ -2526,7 +2540,13 @@ public class ChartViewService {
                                 }
                             } else {
                                 for (HashMap hashMap : tableRow) {
-                                    BigDecimal o = (BigDecimal) hashMap.get(index.getDataeaseName());
+                                    BigDecimal o = null;
+                                    Object o1 = hashMap.get(index.getDataeaseName());
+                                    if (o1 instanceof BigDecimal) {
+                                        o = (BigDecimal) hashMap.get(index.getDataeaseName());
+                                    } else {
+                                        o = BigDecimal.valueOf((Long.parseLong(o1.toString())));
+                                    }
                                     BigDecimal bigDecimal = avgDataMap.get("date");
                                     BigDecimal avg = bigDecimal.divide(new BigDecimal(numDay), 8, RoundingMode.HALF_UP);
                                     if (avg.toString().equals("0")) {
@@ -2554,7 +2574,13 @@ public class ChartViewService {
                                             indexNameList.add(hashMap.get(o.toString()).toString());
                                         }
                                     }
-                                    BigDecimal o = (BigDecimal) hashMap.get(index.getDataeaseName());
+                                    BigDecimal o = null;
+                                    Object o1 = hashMap.get(index.getDataeaseName());
+                                    if (o1 instanceof BigDecimal) {
+                                        o = (BigDecimal) hashMap.get(index.getDataeaseName());
+                                    } else {
+                                        o = BigDecimal.valueOf((Long.parseLong(o1.toString())));
+                                    }
                                     BigDecimal bigDecimal = avgDataMap.get(org.apache.commons.lang.StringUtils.join(indexNameList, ","));
                                     if (bigDecimal == null) {
                                         continue;
@@ -2570,7 +2596,13 @@ public class ChartViewService {
                                 }
                             } else {
                                 for (HashMap hashMap : tableRow) {
-                                    BigDecimal o = (BigDecimal) hashMap.get(index.getDataeaseName());
+                                    BigDecimal o = null;
+                                    Object o1 = hashMap.get(index.getDataeaseName());
+                                    if (o1 instanceof BigDecimal) {
+                                        o = (BigDecimal) hashMap.get(index.getDataeaseName());
+                                    } else {
+                                        o = BigDecimal.valueOf((Long.parseLong(o1.toString())));
+                                    }
                                     BigDecimal bigDecimal = avgDataMap.get("date");
                                     if (bigDecimal != null && bigDecimal.toString().equals("0")) {
                                         continue;
@@ -2587,7 +2619,13 @@ public class ChartViewService {
                     case "低于":
                         if (type.equals("固定值")) {
                             for (HashMap hashMap : tableRow) {
-                                BigDecimal o = (BigDecimal) hashMap.get(index.getDataeaseName());
+                                BigDecimal o = null;
+                                Object o1 = hashMap.get(index.getDataeaseName());
+                                if (o1 instanceof BigDecimal) {
+                                    o = (BigDecimal) hashMap.get(index.getDataeaseName());
+                                } else {
+                                    o = BigDecimal.valueOf((Long.parseLong(o1.toString())));
+                                }
                                 if (o.compareTo(value) < 0) {
                                     chartViewDTO.setAlarmColor(rule.getColor());
                                     break;
@@ -2608,7 +2646,13 @@ public class ChartViewService {
                                             indexNameList.add(hashMap.get(o.toString()).toString());
                                         }
                                     }
-                                    BigDecimal o = (BigDecimal) hashMap.get(index.getDataeaseName());
+                                    BigDecimal o = null;
+                                    Object o1 = hashMap.get(index.getDataeaseName());
+                                    if (o1 instanceof BigDecimal) {
+                                        o = (BigDecimal) hashMap.get(index.getDataeaseName());
+                                    } else {
+                                        o = BigDecimal.valueOf((Long.parseLong(o1.toString())));
+                                    }
                                     BigDecimal bigDecimal = avgDataMap.get(org.apache.commons.lang.StringUtils.join(indexNameList, ","));
                                     if (bigDecimal == null) {
                                         continue;
@@ -2625,7 +2669,13 @@ public class ChartViewService {
                                 }
                             } else {
                                 for (HashMap hashMap : tableRow) {
-                                    BigDecimal o = (BigDecimal) hashMap.get(index.getDataeaseName());
+                                    BigDecimal o = null;
+                                    Object o1 = hashMap.get(index.getDataeaseName());
+                                    if (o1 instanceof BigDecimal) {
+                                        o = (BigDecimal) hashMap.get(index.getDataeaseName());
+                                    } else {
+                                        o = BigDecimal.valueOf((Long.parseLong(o1.toString())));
+                                    }
                                     BigDecimal bigDecimal = avgDataMap.get("date");
                                     BigDecimal avg = bigDecimal.divide(new BigDecimal(numDay), 8, RoundingMode.HALF_UP);
                                     if (avg.toString().equals("0")) {
@@ -2653,7 +2703,13 @@ public class ChartViewService {
                                             indexNameList.add(hashMap.get(o.toString()).toString());
                                         }
                                     }
-                                    BigDecimal o = (BigDecimal) hashMap.get(index.getDataeaseName());
+                                    BigDecimal o = null;
+                                    Object o1 = hashMap.get(index.getDataeaseName());
+                                    if (o1 instanceof BigDecimal) {
+                                        o = (BigDecimal) hashMap.get(index.getDataeaseName());
+                                    } else {
+                                        o = BigDecimal.valueOf((Long.parseLong(o1.toString())));
+                                    }
                                     BigDecimal bigDecimal = avgDataMap.get(org.apache.commons.lang.StringUtils.join(indexNameList, ","));
                                     if (bigDecimal == null) {
                                         continue;
@@ -2669,7 +2725,13 @@ public class ChartViewService {
                                 }
                             } else {
                                 for (HashMap hashMap : tableRow) {
-                                    BigDecimal o = (BigDecimal) hashMap.get(index.getDataeaseName());
+                                    BigDecimal o = null;
+                                    Object o1 = hashMap.get(index.getDataeaseName());
+                                    if (o1 instanceof BigDecimal) {
+                                        o = (BigDecimal) hashMap.get(index.getDataeaseName());
+                                    } else {
+                                        o = BigDecimal.valueOf((Long.parseLong(o1.toString())));
+                                    }
                                     BigDecimal bigDecimal = avgDataMap.get("date");
                                     if (bigDecimal != null && bigDecimal.toString().equals("0")) {
                                         continue;
