@@ -543,6 +543,7 @@ public class ChartDataBuild {
             series1.setName(y.getName());
             series1.setType(y.getChartType());
             series1.setData(new ArrayList<>());
+            series1.setConnectNulls(true);
             series.add(series1);
         }
         for (int i1 = 0; i1 < data.size(); i1++) {

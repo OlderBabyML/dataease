@@ -226,7 +226,7 @@ export default {
             }
           })
         }
-        const result = { ...temp, ...{ DetailAreaCode: DetailAreaCode } }
+        const result = { ...temp, ...{ DetailAreaCode: DetailAreaCode }}
         this.setLastMapChart(result)
         return result
       }
@@ -300,7 +300,6 @@ export default {
       link.click()
       document.body.removeChild(link)
     },
-    exportExcelDownload(snapshot, width, height) {
     exportExcelDownload(snapshot, width, height, callBack) {
       const excelHeader = JSON.parse(JSON.stringify(this.chart.data.fields)).map(item => item.name)
       const excelTypes = JSON.parse(JSON.stringify(this.chart.data.fields)).map(item => item.deType)

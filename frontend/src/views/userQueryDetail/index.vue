@@ -403,7 +403,8 @@ export default {
       userAttrList: [{ label: 'user_id', value: 'userId' }, { label: 'uid', value: 'uid' }, { label: 'country', value: 'country' }],
       userAttrYohoList: [{ label: 'uid', value: 'uid' }, { label: 'country', value: 'country' }],
       userAttrSoMatchList: [{ label: 'uid', value: 'uid' }],
-      productList: ['Mico', 'Yoho', 'SoMatch'],
+      userAttrTopTopList: [{ label: 'uid', value: 'uid' }, { label: 'user_id', value: 'user_id' }],
+      productList: ['Mico', 'Yoho', 'SoMatch', 'TopTop'],
       operatorList: [{ label: '等于', value: '=' }],
       operator: '=',
       product: 'Mico',
@@ -740,7 +741,7 @@ export default {
         this.userAttrList = [{ label: 'uid', value: 'uid' }, { label: 'country', value: 'country' }]
       } else {
         this.attr = 'uid'
-        this.userAttrList = [{ label: 'uid', value: 'uid' }]
+        this.userAttrList = [{ label: 'uid', value: 'uid' }, { label: 'user_id', value: 'userId' }]
       }
     },
     filterNode(value, data) {
