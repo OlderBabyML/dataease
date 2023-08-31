@@ -102,6 +102,10 @@
             @change="dynamicInfillChange"
           >
             <el-option
+              :label="$t('dynamic_time.hour')"
+              value="hour"
+            />
+            <el-option
               :label="$t('dynamic_time.date')"
               value="day"
             />
@@ -190,6 +194,10 @@
             placeholder=""
             @change="dynamicInfillChange"
           >
+            <el-option
+              :label="$t('dynamic_time.hour')"
+              value="hour"
+            />
             <el-option
               :label="$t('dynamic_time.date')"
               value="day"

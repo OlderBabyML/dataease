@@ -2733,6 +2733,7 @@ export default {
     firstOfMonth: 'Month Beginning',
     firstOfYear: 'Year Beginning',
     custom: 'Custom',
+    hour: 'hour',
     date: 'date',
     week: 'week',
     month: 'Month',

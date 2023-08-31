@@ -193,6 +193,11 @@ class TimeDateRangeServiceImpl extends WidgetService {
     return days
   }
   customTime(dynamicPrefix, dynamicInfill, dynamicSuffix) {
+    if (dynamicInfill === 'hour') {
+      const onehour = 3600 * 1000
+      const step = onehour * dynamicPrefix
+      return dynamicSuffix === 'before' ? (Date.now() - step) : (Date.now() + step)
+    }
     if (dynamicInfill === 'day') {
       const oneday = 24 * 3600 * 1000
       const step = oneday * dynamicPrefix
@@ -286,15 +291,17 @@ class TimeDateRangeServiceImpl extends WidgetService {
 
     const attrs = element.options.attrs
 
-    if (attrs.default.sDynamicSuffixTime && attrs.default.isDynamic && attrs.default.dkey === 4 && attrs.showTime) {
-      start = attrs.default.sDynamicSuffixTime - baseTime + timeSection(start, 'date')[0]
-    } else {
-      start = timeSection(start, 'date', labelFormat)[0]
-    }
-    if (attrs.default.eDynamicSuffixTime && attrs.default.isDynamic && attrs.default.dkey === 4 && attrs.showTime) {
-      end = attrs.default.eDynamicSuffixTime - baseTime + timeSection(end, 'date')[0]
-    } else {
-      end = timeSection(end, 'date', labelFormat)[1]
+    if (typeof attrs.default.eDynamicInfill !== 'undefined' && attrs.default.eDynamicInfill !== 'hour') {
+      if (attrs.default.sDynamicSuffixTime && attrs.default.isDynamic && attrs.default.dkey === 4 && attrs.showTime) {
+        start = attrs.default.sDynamicSuffixTime - baseTime + timeSection(start, 'date')[0]
+      } else {
+        start = timeSection(start, 'date', labelFormat)[0]
+      }
+      if (attrs.default.eDynamicSuffixTime && attrs.default.isDynamic && attrs.default.dkey === 4 && attrs.showTime) {
+        end = attrs.default.eDynamicSuffixTime - baseTime + timeSection(end, 'date')[0]
+      } else {
+        end = timeSection(end, 'date', labelFormat)[1]
+      }
     }
 
     const results = [start, end]
