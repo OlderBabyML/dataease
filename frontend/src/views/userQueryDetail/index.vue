@@ -404,7 +404,7 @@ export default {
       userAttrYohoList: [{ label: 'uid', value: 'uid' }, { label: 'country', value: 'country' }],
       userAttrSoMatchList: [{ label: 'uid', value: 'uid' }],
       userAttrTopTopList: [{ label: 'uid', value: 'uid' }, { label: 'user_id', value: 'user_id' }],
-      productList: ['Mico', 'Yoho', 'SoMatch', 'TopTop'],
+      productList: ['Mico', 'Yoho', 'SoMatch', 'TopTop', 'Voko'],
       operatorList: [{ label: '等于', value: '=' }],
       operator: '=',
       product: 'Mico',
@@ -739,6 +739,9 @@ export default {
       } else if (this.product === 'Yoho') {
         this.attr = 'uid'
         this.userAttrList = [{ label: 'uid', value: 'uid' }, { label: 'country', value: 'country' }]
+      } else if (this.product === 'Voko') {
+        this.attr = 'uid'
+        this.userAttrList = [{ label: 'uid', value: 'uid' }]
       } else {
         this.attr = 'uid'
         this.userAttrList = [{ label: 'uid', value: 'uid' }, { label: 'user_id', value: 'userId' }]
@@ -908,9 +911,11 @@ export default {
       }, 300)
     },
     enterQuery(row) {
+      this.userListLoading = true
       this.userId = row.userId
       this.attrList = row.userInfo
       getOptions({ product: this.product }).then(response => {
+        this.userListLoading = false
         this.totalOption = response.data
         let flag = true
         this.totalOption.forEach((item) => {

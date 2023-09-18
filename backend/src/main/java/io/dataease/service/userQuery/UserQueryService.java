@@ -140,6 +140,8 @@ public class UserQueryService {
             product = somatchAl;
         } else if (userInfoDTO.getProduct().equals("TopTop")) {
             product = topAl;
+        } else {
+            product = userInfoDTO.getProduct().toLowerCase() + "_al";
         }
         DatasourceRequest datasourceRequest = new DatasourceRequest();
         List<Datasource> dw = datasourceService.selectByTypeAndName(DatasourceTypes.impala.getType(), product);
@@ -221,10 +223,10 @@ public class UserQueryService {
         } else if (userInfoDTO.getProduct().equals("TopTop")) {
             product = topDw;
             columnName = "uid";
+        } else {
+            product = userInfoDTO.getProduct().toLowerCase() + "_dw";
+            columnName = "uid";
         }
-        DatasourceRequest datasourceRequest = new DatasourceRequest();
-//        JdbcProvider jdbcProvider = (JdbcProvider) ProviderFactory.getProvider(DatasourceTypes.impala.getType());
-//        List<Datasource> dw = datasourceService.selectByTypeAndName(DatasourceTypes.impala.getType(), product);
         List<JSONObject> eventList = userInfoDTO.getEventList();
         HashMap<String, List<String>> nodeHashMap = new HashMap<>();
         for (JSONObject o : eventList) {
@@ -278,8 +280,6 @@ public class UserQueryService {
         }
         String sql = String.join(" union all ", arrayList);
         sql = "select dt,event_name,sum(ct) ct from (" + sql + ") t group by dt,event_name order by dt";
-//        datasourceRequest.setDatasource(dw.get(0));
-//        datasourceRequest.setQuery(sql);
         List<JSONObject> jsonData = queryPresto(sql);
         ArrayList<JSONObject> charts = new ArrayList<>();
         ArrayList<JSONObject> pips = new ArrayList<>();
@@ -339,10 +339,10 @@ public class UserQueryService {
         } else if (userInfoDTO.getProduct().equals("TopTop")) {
             columnName = "uid";
             product = topDw;
+        } else {
+            columnName = "uid";
+            product = userInfoDTO.getProduct().toLowerCase() + "_dw";
         }
-        DatasourceRequest datasourceRequest = new DatasourceRequest();
-//        JdbcProvider jdbcProvider = (JdbcProvider) ProviderFactory.getProvider(DatasourceTypes.impala.getType());
-//        List<Datasource> dw = datasourceService.selectByTypeAndName(DatasourceTypes.impala.getType(), product);
         List<JSONObject> eventList = userInfoDTO.getEventList();
         HashMap<String, List<String>> nodeHashMap = new HashMap<>();
         for (JSONObject o : eventList) {
@@ -394,13 +394,9 @@ public class UserQueryService {
                     break;
             }
         }
-        //String sql = String.join(" union all ", arrayList);
-        //sql = "select * from (" + sql + ") t order by `timestamp` " + userInfoDTO.getSort();
         if (arrayList.size() > 0) {
             for (String s : arrayList) {
                 String sql = "select * from (" + s + ") t ";
-//                datasourceRequest.setDatasource(dw.get(0));
-//                datasourceRequest.setQuery(sql);
                 List<JSONObject> jsonData = queryPresto(sql);
                 for (JSONObject object : jsonData) {
                     String dt = DateUtils.getDateString(DateUtils.getDate(object.getString("dt"), "yyyyMMdd"));
@@ -501,10 +497,10 @@ public class UserQueryService {
         } else if (userInfoDTO.getProduct().equals("TopTop")) {
             columnName = "uid";
             product = topDw;
+        } else {
+            columnName = "uid";
+            product = userInfoDTO.getProduct().toLowerCase() + "_dw";
         }
-        DatasourceRequest datasourceRequest = new DatasourceRequest();
-//        JdbcProvider jdbcProvider = (JdbcProvider) ProviderFactory.getProvider(DatasourceTypes.impala.getType());
-//        List<Datasource> dw = datasourceService.selectByTypeAndName(DatasourceTypes.impala.getType(), product);
         List<JSONObject> eventList = userInfoDTO.getEventList();
         HashMap<String, List<String>> nodeHashMap = new HashMap<>();
         for (JSONObject o : eventList) {
@@ -559,8 +555,6 @@ public class UserQueryService {
                     break;
             }
         }
-//        String sql = String.join(" union all ", arrayList);
-//        sql = "select * from (" + sql + ") t order by `timestamp` " + userInfoDTO.getSort();
         if (arrayList.size() > 0) {
             for (String s : arrayList) {
                 String sql = "select * from (" + s + ") t ";
@@ -666,6 +660,10 @@ public class UserQueryService {
             product = topDw;
             productHr = topDw;
             tableName = "ads_user_attr";
+        } else {
+            product = userInfoDTO.getProduct().toLowerCase() + "_dw";
+            productHr = userInfoDTO.getProduct().toLowerCase() + "_dw";
+            tableName = "ads_user_attr";
         }
         DatasourceRequest datasourceRequest = new DatasourceRequest();
         ImpalaQueryProvider qp = (ImpalaQueryProvider) ProviderFactory.getQueryProvider(DatasourceTypes.impala.getType());
@@ -680,6 +678,12 @@ public class UserQueryService {
             requestList.add(chartFieldCustomFilterDTO);
             List<JSONObject> userList = getUserList(product, productHr, tableName, startTime, qp, "user_id", datasourceRequest, requestList, userInfoDTO.getUserId(), jdbcProvider);
             JSONObject jsonObject = new JSONObject();
+            userList = userList.stream().filter(new Predicate<JSONObject>() {
+                @Override
+                public boolean test(JSONObject jsonObject) {
+                    return !jsonObject.getString("name").toLowerCase().contains("phone") && !jsonObject.getString("name").toLowerCase().contains("email");
+                }
+            }).collect(Collectors.toList());
             jsonObject.put("id", userInfoDTO.getUserId().toString());
             jsonObject.put("userId", userInfoDTO.getUserId().toString());
             jsonObject.put("userInfo", userList);
@@ -693,6 +697,13 @@ public class UserQueryService {
             List<JSONObject> userList = null;
             userList = getUserList(product, productHr, tableName, startTime, qp, "uid", datasourceRequest, requestList, userInfoDTO.getUid(), jdbcProvider);
             JSONObject jsonObject = new JSONObject();
+            userList = userList.stream().filter(new Predicate<JSONObject>() {
+                @Override
+                public boolean test(JSONObject jsonObject) {
+                    String name = jsonObject.getString("name");
+                    return !(name.contains("phone")) && !(name.contains("email"));
+                }
+            }).collect(Collectors.toList());
             jsonObject.put("id", userInfoDTO.getUid().toString());
             jsonObject.put("userId", userInfoDTO.getUid().toString());
             jsonObject.put("userInfo", userList);
@@ -724,9 +735,11 @@ public class UserQueryService {
                             if (entry.getKey().equals("user_id")) {
                                 jsonObject.put("userId", entry.getValue().toString());
                             }
-                            object.put("name", entry.getKey());
-                            object.put("value", entry.getValue());
-                            jsonObjects.add(object);
+                            if (!entry.getKey().toLowerCase().contains("phone") && !entry.getKey().toLowerCase().contains("email")) {
+                                object.put("name", entry.getKey());
+                                object.put("value", entry.getValue());
+                                jsonObjects.add(object);
+                            }
                         }
                     }
                     return users;
